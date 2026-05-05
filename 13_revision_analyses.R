@@ -207,3 +207,50 @@ for(i in 1:nrow(tf_act)) {
 }
 cor_results$padj <- p.adjust(cor_results$p, method = "BH")
 cor_results <- cor_results[order(-abs(cor_results$rho)), ]
+# ============================================================
+# NicheNet配体活性分析（Revision新增）
+# ============================================================
+
+library(nichenetr)
+library(dplyr)
+
+ligand_target_matrix <- readRDS("D:/scRNA_project/nichenet/ligand_target_matrix_nsga2r_final.rds")
+lr_network           <- readRDS("D:/scRNA_project/nichenet/lr_network_human_21122021.rds")
+weighted_networks    <- readRDS("D:/scRNA_project/nichenet/weighted_networks_nsga2r_final.rds")
+
+sender_cells <- colnames(subset(seu, site == "Tumor" &
+                                  celltype == "Hepatocyte" &
+                                  Glycolysis_AUC > median(seu$Glycolysis_AUC[
+                                    seu$site == "Tumor" & seu$celltype == "Hepatocyte"])))
+
+receiver_cells <- colnames(subset(seu, site == "Tumor" &
+                                    celltype %in% c("T/NK", "Myeloid")))
+
+expr_sender   <- GetAssayData(seu, layer = "data")[, sender_cells]
+expr_receiver <- GetAssayData(seu, layer = "data")[, receiver_cells]
+
+expressed_genes_sender   <- rownames(expr_sender)[rowSums(expr_sender > 0) / ncol(expr_sender) > 0.10]
+expressed_genes_receiver <- rownames(expr_receiver)[rowSums(expr_receiver > 0) / ncol(expr_receiver) > 0.10]
+
+ligands   <- lr_network %>% pull(from) %>% unique()
+receptors <- lr_network %>% pull(to) %>% unique()
+
+expressed_ligands   <- intersect(ligands,   expressed_genes_sender)
+expressed_receptors <- intersect(receptors, expressed_genes_receiver)
+
+geneset_oi <- intersect(
+  c("PDCD1","HAVCR2","TIGIT","LAG3","TOX","CTLA4","CD274","VSIR",
+    "ENTPD1","CD96","ARG1","IL10","TGFB1","CD163","MRC1",
+    "CXCL8","CCL2","VEGFA","SPP1","MIF"),
+  expressed_genes_receiver
+)
+
+ligand_activities <- predict_ligand_activities(
+  geneset = geneset_oi,
+  background_expressed_genes = expressed_genes_receiver,
+  ligand_target_matrix = ligand_target_matrix,
+  potential_ligands = expressed_ligands
+)
+
+ligand_activities <- ligand_activities %>% arrange(-aupr_corrected)
+# MIF排名37/325 AUPR=0.091；SPP1排名250/325 AUPR=0.026
