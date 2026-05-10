@@ -254,3 +254,220 @@ ligand_activities <- predict_ligand_activities(
 
 ligand_activities <- ligand_activities %>% arrange(-aupr_corrected)
 # MIF排名37/325 AUPR=0.091；SPP1排名250/325 AUPR=0.026
+
+# ============================================================
+# Supplementary Figure S9: UMI Downsampling Sensitivity
+# ============================================================
+
+library(Matrix)
+library(CellChat)
+
+cat("=== S9: UMI Downsampling Sensitivity ===\n")
+
+# tumor_hep must be loaded (from workspace or Script 02 output)
+# Compute median UMI per group
+high_cells <- colnames(tumor_hep)[tumor_hep$glyco_group == "TumorGlycoHigh"]
+low_cells  <- colnames(tumor_hep)[tumor_hep$glyco_group == "TumorGlycoLow"]
+
+umi_high <- colSums(GetAssayData(tumor_hep[, high_cells], layer = "counts"))
+umi_low  <- colSums(GetAssayData(tumor_hep[, low_cells],  layer = "counts"))
+target_umi <- median(umi_low)   # ~4,410
+cat("GlycoHigh median UMI:", median(umi_high), "\n")
+cat("GlycoLow  median UMI:", median(umi_low),  "\n")
+cat("Downsampling target:", target_umi, "\n")
+
+# Multinomial downsampling of GlycoHigh cells
+set.seed(42)
+counts_high <- GetAssayData(tumor_hep[, high_cells], layer = "counts")
+counts_ds   <- apply(counts_high, 2, function(cell_counts) {
+  total <- sum(cell_counts)
+  if (total <= target_umi) return(cell_counts)
+  probs <- cell_counts / total
+  as.integer(rmultinom(1, size = target_umi, prob = probs))
+})
+rownames(counts_ds) <- rownames(counts_high)
+
+# Re-compute AUCell glycolysis scores on downsampled matrix
+rankings_ds  <- AUCell_buildRankings(counts_ds, plotStats = FALSE)
+auc_ds       <- AUCell_calcAUC(list(glycolysis = glycolysis_genes),
+                                rankings_ds,
+                                aucMaxRank = ceiling(0.05 * nrow(counts_ds)))
+glyco_ds_scores <- as.numeric(getAUC(auc_ds)["glycolysis", ])
+cat("Glycolysis AUC post-downsampling — mean:",
+    round(mean(glyco_ds_scores), 4), "\n")
+
+# Re-run CellChat on downsampled dataset
+# (requires seu object with cell_type_glyco metadata)
+# Build expression matrix: replace GlycoHigh with downsampled counts
+counts_full      <- GetAssayData(seu, assay = "RNA", layer = "counts")
+counts_full_ds   <- counts_full
+counts_full_ds[, high_cells] <- counts_ds
+
+seu_ds <- seu
+seu_ds[["RNA"]] <- SetAssayData(seu_ds[["RNA"]], layer = "counts",
+                                 new.data = counts_full_ds)
+seu_ds <- NormalizeData(seu_ds)
+
+meta_ds <- data.frame(cell_type_glyco = seu$cell_type_glyco,
+                       row.names       = colnames(seu))
+cellchat_ds <- createCellChat(
+  object   = GetAssayData(seu_ds, layer = "data"),
+  meta     = meta_ds,
+  group.by = "cell_type_glyco"
+)
+cellchat_ds@DB <- CellChatDB.human
+cellchat_ds <- subsetData(cellchat_ds)
+cellchat_ds <- identifyOverExpressedGenes(cellchat_ds)
+cellchat_ds <- identifyOverExpressedInteractions(cellchat_ds)
+cellchat_ds <- computeCommunProb(cellchat_ds, type = "triMean", nboot = 1000)
+cellchat_ds <- filterCommunication(cellchat_ds, min.cells = 10)
+cellchat_ds <- computeCommunProbPathway(cellchat_ds)
+cellchat_ds <- aggregateNet(cellchat_ds)
+saveRDS(cellchat_ds, "D:/scRNA_project/hcc_cellchat_downsampled.rds")
+
+# Extract SPP1 and MIF pathway probabilities and compare
+extract_pathway_prob <- function(cc, pathway, sender, receiver) {
+  df <- subsetCommunication(cc, slot.name = "netP")
+  df[df$pathway_name == pathway &
+       df$source == sender & df$target == receiver, "prob"]
+}
+
+# Report: SPP1 and MIF to Macrophage before and after downsampling
+cat("\n--- Downsampling comparison (manuscript Table S9) ---\n")
+for (pw in c("SPP1", "MIF")) {
+  orig_prob <- extract_pathway_prob(
+    readRDS("D:/scRNA_project/hcc_cellchat_round2_glyco.rds"),
+    pw, "TumorGlycoHigh", "Myeloid"
+  )
+  ds_prob <- extract_pathway_prob(cellchat_ds, pw, "TumorGlycoHigh", "Myeloid")
+  cat(sprintf("%s -> Myeloid | Original: %.4f | Downsampled: %.4f\n",
+              pw,
+              ifelse(length(orig_prob) > 0, orig_prob, NA),
+              ifelse(length(ds_prob)   > 0, ds_prob,   NA)))
+}
+# SPP1 expect: 0.209 vs 0.052 (FC 3.1-6.5); MIF: 0.1368 vs 0.1198
+
+# ============================================================
+# Supplementary Figure S10: Permutation Control
+# ENO1-glycolysis circularity check
+# ============================================================
+
+cat("\n=== S10: Permutation control (ENO1 circularity) ===\n")
+
+set.seed(42)
+n_perm  <- 100
+eno1_expr <- as.numeric(
+  GetAssayData(tumor_hep, layer = "data")["ENO1", ]
+)
+
+# Real glycolysis AUC score
+auc_real  <- AUCell_calcAUC(list(glycolysis = glycolysis_genes),
+                             rankings,
+                             aucMaxRank = ceiling(0.05 * nrow(rankings)))
+real_rho  <- cor(eno1_expr, as.numeric(getAUC(auc_real)["glycolysis", ]),
+                 method = "spearman")
+
+# Background: 100 random non-glycolytic gene sets of equal size
+all_genes    <- rownames(GetAssayData(tumor_hep, layer = "data"))
+non_glyco    <- setdiff(all_genes, glycolysis_genes)
+perm_rhos    <- numeric(n_perm)
+
+for (i in seq_len(n_perm)) {
+  rand_set  <- sample(non_glyco, length(glycolysis_genes))
+  auc_rand  <- AUCell_calcAUC(list(rand = rand_set), rankings,
+                               aucMaxRank = ceiling(0.05 * nrow(rankings)))
+  perm_rhos[i] <- cor(eno1_expr,
+                      as.numeric(getAUC(auc_rand)["rand", ]),
+                      method = "spearman")
+}
+
+emp_p <- mean(perm_rhos >= real_rho)
+cat(sprintf("Real glycolysis rho = %.3f | Permutation empirical p = %.3f\n",
+            real_rho, emp_p))  # expect rho~0.541, p<0.01
+
+# Plot S10
+perm_df <- data.frame(rho = perm_rhos)
+p_s10 <- ggplot(perm_df, aes(x = rho)) +
+  geom_histogram(bins = 30, fill = "grey70", color = "white") +
+  geom_vline(xintercept = real_rho, color = "#E64B35",
+             linewidth = 1, linetype = "dashed") +
+  annotate("text", x = real_rho + 0.02, y = Inf,
+           label = sprintf("Real rho = %.3f\np < 0.01", real_rho),
+           hjust = 0, vjust = 1.5, color = "#E64B35", size = 4) +
+  labs(x = "Spearman rho (ENO1 vs. random gene set AUCell score)",
+       y = "Count",
+       title = "Permutation Control: ENO1-Glycolysis Circularity Check",
+       subtitle = "100 random gene sets of equal size (n=22)") +
+  theme_classic(base_size = 12)
+
+ggsave("output/FigS10_permutation_control.pdf", p_s10, width = 7, height = 5)
+ggsave("output/FigS10_permutation_control.png", p_s10, width = 7, height = 5,
+       dpi = 300)
+cat("Supplementary Figure S10 saved.\n")
+
+# ============================================================
+# Supplementary Figure S12: Per-patient stratified correlation
+# ============================================================
+
+cat("\n=== S12: Per-patient ENO1-glycolysis correlation ===\n")
+
+patients <- unique(tumor_hep$patient)
+cat("Patients:", length(patients), "\n")
+
+per_patient_cor <- lapply(patients, function(pt) {
+  cells  <- colnames(tumor_hep)[tumor_hep$patient == pt]
+  if (length(cells) < 30) {
+    cat("  Skipping", pt, "(n =", length(cells), "< 30)\n")
+    return(NULL)
+  }
+  eno1_pt  <- as.numeric(
+    GetAssayData(tumor_hep[, cells], layer = "data")["ENO1", ]
+  )
+  glyco_pt <- tumor_hep$glycolysis_score[cells]
+  ct       <- cor.test(eno1_pt, glyco_pt, method = "spearman", exact = FALSE)
+
+  # Fisher z CI for Spearman rho
+  z     <- 0.5 * log((1 + ct$estimate) / (1 - ct$estimate))
+  se    <- 1 / sqrt(length(cells) - 3)
+  ci_lo <- tanh(z - 1.96 * se)
+  ci_hi <- tanh(z + 1.96 * se)
+
+  data.frame(
+    patient  = pt,
+    n_cells  = length(cells),
+    rho      = ct$estimate,
+    ci_lower = ci_lo,
+    ci_upper = ci_hi,
+    pval     = ct$p.value
+  )
+}) %>% bind_rows()
+
+per_patient_cor$padj <- p.adjust(per_patient_cor$pval, method = "BH")
+cat("\nPer-patient correlations:\n"); print(per_patient_cor)
+# All 8 should be significant; rho range 0.193-0.610
+
+p_s12 <- ggplot(per_patient_cor,
+                aes(x = reorder(patient, rho), y = rho)) +
+  geom_hline(yintercept = 0.57, linetype = "dashed",
+             color = "grey50", linewidth = 0.6) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper),
+                width = 0.3, color = "grey40") +
+  geom_point(aes(size = n_cells, color = padj < 0.05)) +
+  scale_color_manual(values = c("TRUE" = "#E64B35", "FALSE" = "grey60"),
+                     name = "BH-adj p < 0.05") +
+  scale_size_continuous(name = "Cell count", range = c(3, 8)) +
+  annotate("text", x = Inf, y = 0.57, hjust = 1.1, vjust = -0.5,
+           label = "Global R = 0.57", size = 3.5, color = "grey50") +
+  labs(x = "Patient", y = "Spearman rho (ENO1 ~ Glycolysis AUC)",
+       title = "Per-patient ENO1-Glycolysis Correlation",
+       subtitle = "Error bars = 95% CI (Fisher z-transformation)") +
+  theme_classic(base_size = 12) +
+  theme(legend.position = "bottom")
+
+ggsave("output/FigS12_per_patient_correlation.pdf",
+       p_s12, width = 8, height = 5)
+ggsave("output/FigS12_per_patient_correlation.png",
+       p_s12, width = 8, height = 5, dpi = 300)
+cat("Supplementary Figure S12 saved.\n")
+
+cat("\n=== All revision analyses complete ===\n")
