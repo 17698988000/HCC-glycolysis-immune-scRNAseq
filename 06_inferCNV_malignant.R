@@ -1,18 +1,21 @@
 # ============================================================
-# 06_inferCNV_malignant.R
-# Purpose: Identify malignant hepatocytes using inferCNV and
-#          transcriptomic malignancy marker scoring
-# Corresponds to: Methods Section 2.5
+# Script 06: inferCNV Malignant Hepatocyte Identification
+# Section 2.5
 # ============================================================
 
 library(Seurat)
 library(infercnv)
 library(ggplot2)
 
-# ── Load data ──────────────────────────────────────────────
-seu <- readRDS("D:/scRNA_project/seurat_final.rds")
+setwd("D:/scRNA_project")
 
-# ── 1. Transcriptomic malignancy marker scoring ────────────
+seu <- readRDS("seurat_final.rds")
+
+# ============================================================
+# Part 1: Transcriptomic malignancy marker scoring
+# ============================================================
+cat("=== Part 1: Malignancy marker scoring ===\n")
+
 malignancy_markers <- list(
   Malignancy = c("AFP", "GPC3", "EPCAM", "SALL4", "CDH17", "KRT19")
 )
@@ -20,61 +23,125 @@ malignancy_markers <- list(
 seu <- AddModuleScore(
   seu,
   features = malignancy_markers,
-  name = "Malignancy_Score",
-  ctrl = 100
+  name     = "Malignancy_Score",
+  ctrl     = 100
 )
 
-# Classify hepatocytes above median as putatively malignant
-hep_idx <- which(seu$cell_type == "Hepatocyte")
+# ── FIX: Use "Hepatocytes" (with s) to match Script 01 ──
+hep_idx      <- which(seu$cell_type == "Hepatocytes")
 median_score <- median(seu$Malignancy_Score1[hep_idx])
+
 seu$malignant_status <- "Non-Hepatocyte"
 seu$malignant_status[hep_idx] <- ifelse(
   seu$Malignancy_Score1[hep_idx] >= median_score,
   "Malignant", "Non-malignant"
 )
 
-cat("Malignant hepatocytes:", sum(seu$malignant_status == "Malignant"), "\n")
+cat("Malignant hepatocytes:    ", sum(seu$malignant_status == "Malignant"),    "\n")
 cat("Non-malignant hepatocytes:", sum(seu$malignant_status == "Non-malignant"), "\n")
 
-# ── 2. inferCNV ────────────────────────────────────────────
-# Prepare count matrix (hepatocytes + reference T cells + endothelial cells)
-ref_cells <- c("T cell", "Endothelial")
-cells_use <- seu$cell_type %in% c("Hepatocyte", ref_cells)
-seu_sub <- subset(seu, cells = colnames(seu)[cells_use])
+saveRDS(seu, "seurat_malignancy_scored.rds")
 
+# ============================================================
+# Part 2: inferCNV analysis
+# ============================================================
+cat("\n=== Part 2: inferCNV ===\n")
+
+# ── FIX: Use correct cell type names matching Script 01 ──
+# Script 01 saves: "Hepatocytes", "T_NK", "Endothelial"
+ref_cells <- c("T_NK", "Endothelial")   # was: c("T cell", "Endothelial") ← FIXED
+
+cells_use <- seu$cell_type %in% c("Hepatocytes", ref_cells)
+seu_sub   <- subset(seu, cells = colnames(seu)[cells_use])
+cat("Cells for inferCNV (hepatocytes + reference):", ncol(seu_sub), "\n")
+cat("  Hepatocytes:", sum(seu_sub$cell_type == "Hepatocytes"), "\n")
+cat("  T_NK:       ", sum(seu_sub$cell_type == "T_NK"),        "\n")
+cat("  Endothelial:", sum(seu_sub$cell_type == "Endothelial"), "\n")
+
+# Count matrix (raw counts required by inferCNV)
 counts_mat <- GetAssayData(seu_sub, assay = "RNA", layer = "counts")
 
-# Cell annotations
+# Cell annotations file
+out_dir    <- "D:/scRNA_project/inferCNV_output/"
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+annot_file <- file.path(out_dir, "cell_annotations.txt")
+
 cell_annots <- data.frame(
   cell_type = seu_sub$cell_type,
   row.names = colnames(seu_sub)
 )
-annot_file <- "D:/scRNA_project/inferCNV_output/cell_annotations.txt"
-dir.create("D:/scRNA_project/inferCNV_output/", showWarnings = FALSE)
-write.table(cell_annots, annot_file, sep = "\t", quote = FALSE, col.names = FALSE)
+write.table(cell_annots, annot_file,
+            sep = "\t", quote = FALSE, col.names = FALSE)
+cat("Cell annotations written:", annot_file, "\n")
 
 # Gene order file (hg38)
-# Note: gene_order_file should be downloaded from inferCNV repository
-# https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt
+# Download from: https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt
 gene_order_file <- "D:/scRNA_project/hg38_gencode_v27.txt"
+if (!file.exists(gene_order_file)) {
+  cat("Downloading gene order file...\n")
+  download.file(
+    "https://data.broadinstitute.org/Trinity/CTAT/cnv/hg38_gencode_v27.txt",
+    destfile = gene_order_file
+  )
+}
 
+# ── Create inferCNV object ──
 infercnv_obj <- CreateInfercnvObject(
   raw_counts_matrix = counts_mat,
   annotations_file  = annot_file,
   delim             = "\t",
   gene_order_file   = gene_order_file,
-  ref_group_names   = ref_cells
+  ref_group_names   = ref_cells      # T_NK and Endothelial as diploid reference
 )
 
+# ── Run inferCNV (parameters as in Section 2.5) ──
+# cutoff = 0.1: minimum mean expression for reference genes
+# denoise = TRUE, HMM = TRUE, HMM_type = "i6" (6 CNV states)
+# num_ref_groups = 1: treat all reference cells as one group
 infercnv_obj <- infercnv::run(
   infercnv_obj,
   cutoff            = 0.1,
-  out_dir           = "D:/scRNA_project/inferCNV_output/",
+  out_dir           = out_dir,
   cluster_by_groups = TRUE,
   denoise           = TRUE,
   HMM               = TRUE,
   HMM_type          = "i6",
+  num_ref_groups    = 1,
   num_threads       = 4
 )
 
-cat("inferCNV analysis complete. Results saved to D:/scRNA_project/inferCNV_output/\n")
+cat("inferCNV complete. Results in:", out_dir, "\n")
+
+# ============================================================
+# Part 3: Annotate malignant hepatocytes from HMM output
+# Cells with HMM CNV state >= 4 or <= 2 across >= 20% of
+# each chromosome arm are considered malignant (Section 2.5)
+# ============================================================
+cat("\n=== Part 3: Malignant cell annotation from HMM ===\n")
+
+# Load HMM predictions (generated by inferCNV run above)
+hmm_file <- file.path(out_dir, "HMM_CNV_predictions.HMMi6.leiden.hmm_mode-subclusters.Pnorm_0.5.pred_cnv_genes.dat")
+
+if (file.exists(hmm_file)) {
+  hmm_pred <- read.table(hmm_file, header = TRUE, sep = "\t")
+
+  # Mark hepatocytes with extensive CNV as malignant
+  # CNV state >= 4 (amplification) or <= 2 (deletion)
+  cnv_states <- hmm_pred[hmm_pred$cell_group_name %in%
+                            colnames(seu)[seu$cell_type == "Hepatocytes"], ]
+
+  malignant_cnv_cells <- cnv_states$cell_group_name[
+    cnv_states$state >= 4 | cnv_states$state <= 2
+  ]
+
+  seu$inferCNV_malignant <- FALSE
+  seu$inferCNV_malignant[colnames(seu) %in% malignant_cnv_cells] <- TRUE
+
+  cat("Malignant by inferCNV HMM:", sum(seu$inferCNV_malignant), "\n")
+  saveRDS(seu, "seurat_inferCNV_annotated.rds")
+} else {
+  cat("HMM prediction file not found. Run inferCNV first.\n")
+  cat("Expected path:", hmm_file, "\n")
+}
+
+cat("\n=== Script 06 complete ===\n")
