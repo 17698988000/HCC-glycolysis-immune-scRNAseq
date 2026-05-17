@@ -121,3 +121,55 @@ ggsave("D:/scRNA_project/Fig8B_spatial_summary.pdf",
 # Save results table
 write.csv(all_results, "D:/scRNA_project/spatial_DE_results.csv", row.names = FALSE)
 cat("Spatial transcriptomics analysis complete.\n")
+# ── Supplementary Figure S18: Spatial GlycoHigh/GlycoLow stratification ──────
+library(Seurat)
+library(ggplot2)
+library(patchwork)
+
+sample_ids  <- c("HCC1R", "HCC2R", "HCC3R", "HCC4R")
+sample_dirs <- paste0("D:/scRNA_project/GSE238264/", sample_ids, "/", sample_ids)
+
+glyco_genes <- c(
+  "HK1","HK2","GPI","PFKL","PFKP","PFKM","ALDOA","ALDOB","ALDOC",
+  "TPI1","GAPDH","PGK1","PGAM1","ENO1","ENO2","PKM","LDHA","LDHB",
+  "SLC2A1","SLC2A3","PFKFB3","GCK"
+)
+
+plot_list <- list()
+for (i in seq_along(sample_ids)) {
+  sid <- sample_ids[i]
+  seu <- Load10X_Spatial(sample_dirs[i])
+  seu <- NormalizeData(seu, assay = "Spatial", verbose = FALSE)
+  glyco_present <- intersect(glyco_genes, rownames(seu))
+  seu <- AddModuleScore(seu, features = list(glyco_present),
+                        name = "Glycolysis", assay = "Spatial")
+  med_score      <- median(seu$Glycolysis1)
+  seu$GlycoGroup <- factor(
+    ifelse(seu$Glycolysis1 >= med_score, "GlycoHigh", "GlycoLow"),
+    levels = c("GlycoLow", "GlycoHigh")
+  )
+  n_high <- sum(seu$GlycoGroup == "GlycoHigh")
+  n_low  <- sum(seu$GlycoGroup == "GlycoLow")
+  cat(sid, "— High:", n_high, "/ Low:", n_low, "\n")
+  p <- SpatialDimPlot(
+    seu, group.by = "GlycoGroup",
+    cols = c("GlycoHigh" = "#D73027", "GlycoLow" = "#4575B4"),
+    pt.size.factor = 1.4, alpha = c(0.8, 0.8)
+  ) +
+    ggtitle(sprintf("%s  (GlycoHigh = %d / GlycoLow = %d)", sid, n_high, n_low)) +
+    theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5))
+  plot_list[[i]] <- p
+}
+
+combined_s18 <- wrap_plots(plot_list, ncol = 2) +
+  plot_annotation(
+    title    = "Spatial GlycoHigh / GlycoLow spot stratification",
+    subtitle = "Spots stratified by median Glycolysis1 score within each sample",
+    theme = theme(plot.title    = element_text(size = 13, face = "bold", hjust = 0.5),
+                  plot.subtitle = element_text(size = 10, hjust = 0.5))
+  )
+ggsave("D:/scRNA_project/FigS18_spatial_GlycoGroup.png",
+       combined_s18, width = 12, height = 10, dpi = 300)
+ggsave("D:/scRNA_project/FigS18_spatial_GlycoGroup.pdf",
+       combined_s18, width = 12, height = 10)
+cat("FigS18 saved.\n")
