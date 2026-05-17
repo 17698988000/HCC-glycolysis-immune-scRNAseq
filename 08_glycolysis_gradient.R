@@ -33,41 +33,41 @@ if (!"glycolysis_AUC" %in% colnames(seu_hep@meta.data)) {
   seu_hep$glycolysis_AUC <- as.numeric(getAUC(auc_scores)["Glycolysis", ])
 }
 
-# ── Bin cells into 10 glycolysis bins ─────────────────────
-seu_hep$glyco_bin <- cut(
-  seu_hep$glycolysis_AUC,
-  breaks = quantile(seu_hep$glycolysis_AUC, probs = seq(0, 1, 0.1)),
-  labels = 1:10,
-  include.lowest = TRUE
-)
+# ── 修复：用 ntile() 强制等人数分箱，避免重复分位数导致空 bin ──────
+library(dplyr)
+library(tidyr)
 
-# ── Extract mean expression per bin ───────────────────────
+seu_hep$glyco_bin <- ntile(seu_hep$glycolysis_AUC, 10)
+cat("Bin 分布（每个 bin 细胞数）:\n")
+print(table(seu_hep$glyco_bin))   # 确认 10 个 bin 都有细胞
+
+# ── 计算每个 bin 的均值 ──────────────────────────────────────────
 target_genes <- c("ENO1","LDHA","SPP1","MIF","PTGES")
 expr_data    <- GetAssayData(seu_hep, assay = "RNA", layer = "data")
 
-bin_means <- sapply(levels(seu_hep$glyco_bin), function(b) {
+bin_means <- sapply(1:10, function(b) {
   cells <- colnames(seu_hep)[seu_hep$glyco_bin == b]
-  rowMeans(expr_data[target_genes, cells])
+  rowMeans(expr_data[target_genes, cells, drop = FALSE])
 })
 
-gradient_df <- as.data.frame(t(bin_means))
-gradient_df$bin <- as.integer(rownames(gradient_df))
+gradient_df        <- as.data.frame(t(bin_means))
+gradient_df$bin    <- 1:10
+rownames(gradient_df) <- NULL
+print(gradient_df)   # 确认 10 行都有数据，无 NaN
 
-# ── Plot gradient (Supplementary Figure S15) ──────────────
-library(tidyr)
+# ── 出图（Supplementary Figure S15）─────────────────────────────
 plot_df <- pivot_longer(gradient_df, cols = all_of(target_genes),
                         names_to = "gene", values_to = "expression")
 plot_df$gene_type <- ifelse(plot_df$gene %in% c("ENO1","LDHA"),
                              "Glycolytic enzyme", "Immunosuppressive ligand")
-plot_df$linetype  <- ifelse(plot_df$gene %in% c("ENO1","LDHA"), "solid", "dashed")
 
 p <- ggplot(plot_df, aes(x = bin, y = expression,
                           color = gene, linetype = gene_type)) +
   geom_line(linewidth = 1.0) +
   geom_point(size = 2) +
-  scale_x_continuous(breaks = 1:10,
-                     labels = paste0("Bin ", 1:10)) +
-  scale_linetype_manual(values = c("solid","dashed")) +
+  scale_x_continuous(breaks = 1:10, labels = paste0("Bin ", 1:10)) +
+  scale_linetype_manual(values = c("Glycolytic enzyme" = "solid",
+                                   "Immunosuppressive ligand" = "dashed")) +
   labs(x = "Glycolysis activity bin (low → high)",
        y = "Mean log-normalized expression",
        title = "Immunosuppressive Ligand Expression Along Glycolysis Gradient",
@@ -79,6 +79,4 @@ ggsave("D:/scRNA_project/FigS15_glycolysis_gradient.png",
        p, width = 9, height = 5, dpi = 300)
 ggsave("D:/scRNA_project/FigS15_glycolysis_gradient.pdf",
        p, width = 9, height = 5)
-
-cat("Gradient analysis complete.\n")
-print(gradient_df)
+cat("完成。x 轴应连续显示 Bin 1 到 Bin 10。\n")
