@@ -36,6 +36,7 @@ These scripts reproduce selected final manuscript figures after figure-level qua
 Corrected final figure mapping:
 
 - Figure 8: benchmarking / model comparison.
+- - Supplementary Figure S12: per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes.
 - Figure 9B: spatial GlycoHigh versus GlycoLow direction consistency.
 - Supplementary Figure S20: RCTD-estimated spatial cell-type composition.
 - Supplementary Figure S21: metabolic specificity / partial Spearman correlation.
