@@ -2,7 +2,7 @@
 
 Analysis code for the ENO1/glycolysis-immune evasion study in hepatocellular carcinoma (HCC).
 
-This repository contains the analysis scripts used for single-cell, spatial, bulk-transcriptomic, and validation analyses. Several revision-stage scripts have been converted to source/QC-first or locked-status scripts to prevent obsolete local-path code from regenerating outdated figures.
+This repository contains the analysis scripts used for single-cell, spatial, bulk-transcriptomic, and validation analyses. Revision-stage scripts have been converted to source/QC-first or locked-status workflows to prevent obsolete local-path code, outdated cell labels, or changed object definitions from regenerating manuscript-inconsistent outputs.
 
 ## Locked analysis conventions
 
@@ -32,16 +32,16 @@ score = 0.3041908 * TPI1 +
 
 The four-gene score was derived from TCGA-LIHC primary tumor survival-matched samples with `n = 365`. The `lambda.min` model retained four genes, whereas the `lambda.1se` model was null.
 
-## Scripts
+## Current script status
 
 | Script | Current role / status |
 |---|---|
-| `01_QC_clustering.R` | Primary scRNA-seq quality control, integration, clustering, and annotation workflow. |
-| `02_glycolysis_scoring.R` | Current locked AUCell glycolysis scoring and GlycoHigh/GlycoLow stratification using `seurat_final.rds`, `patient`, `cell_type`, `site`, and `Glycolysis_AUC`. |
-| `03_cellchat_analysis.R` | CellChat cell-cell communication analysis. Pending later path/label review; do not use this script to override locked downstream figure values without re-QC. |
+| `01_QC_clustering.R` | Primary scRNA-seq quality control, integration, clustering, and annotation workflow. Leave unchanged unless the upstream object-building workflow is intentionally being re-derived. |
+| `02_glycolysis_scoring.R` | Locked current-object GlycoHigh/GlycoLow assignment and QC script. It reads `seurat_final.rds`, uses existing `Glycolysis_AUC`, validates `patient`, `cell_type`, `site`, and `Glycolysis_AUC`, enforces tumor-derived hepatocyte `n = 15,391`, median cutoff `0.2203849`, GlycoLow `n = 7,696`, and GlycoHigh `n = 7,695`, then writes source assignment/QC outputs. It does not recalculate AUCell or overwrite the primary `seurat_final.rds`. |
+| `03_cellchat_analysis.R` | Updated current-object CellChat source/QC workflow. Legacy `D:/scRNA_project` paths, `tumor_hepatocytes.rds` dependency, and obsolete `Hepatocytes` label have been removed. Round 1 uses original `cell_type`; Round 2 uses GlycoHigh/GlycoLow tumor hepatocytes plus remaining cell types; Round 3 is optional only when an explicit subtype column already exists. |
 | `04_TCGA_validation.R` | TCGA-LIHC ENO1 survival, immune infiltration, and TIDE-related validation analyses. |
-| `05_GSE125449_validation.R` | Cross-dataset validation in GSE125449. Pending later path/label review. |
-| `06_inferCNV_malignant.R` | inferCNV malignant hepatocyte identification. Pending later path/label review. |
+| `05_GSE125449_validation.R` | Updated source/QC-first GSE125449 validation workflow. Legacy local paths and fixed hepatocyte-cluster assumptions have been removed. The script loads a prebuilt object or Set1/Set2 matrices, identifies hepatocyte-like cells using available annotation or marker scoring, scores glycolysis, and writes validation source/QC outputs. |
+| `06_inferCNV_malignant.R` | Updated current-object malignant hepatocyte marker-score/QC workflow with optional inferCNV. Legacy local paths, automatic gene-order download, and obsolete `Hepatocytes` label requirement have been removed. Optional inferCNV runs only if the package and a local `hg38_gencode_v27.txt` gene-order file are available. |
 | `07_LASSO_risk_score.R` | Locked TCGA-derived four-gene Cox/LASSO risk-score model using `TPI1`, `ENO1`, `LDHA`, and `SLC2A1`. |
 | `08_glycolysis_gradient.R` | Supplementary Figure S15 glycolysis-gradient analysis using 10 equal-width AUCell-score bins and mean log-normalized expression of `ENO1`, `LDHA`, `SPP1`, `MIF`, and `PTGES` in tumor-derived hepatocytes. |
 | `09_TF_activity.R` | Supplementary Figure S16 DoRothEA/VIPER transcription-factor activity analysis in 15,391 tumor-derived hepatocytes, correlated with `Glycolysis_AUC`. |
@@ -55,6 +55,18 @@ The four-gene score was derived from TCGA-LIHC primary tumor survival-matched sa
 | `17_partial_correlation_metabolic_specificity.R` | Supplementary Figure S21 partial Spearman metabolic-specificity analysis for glycolysis versus OXPHOS, using `SPP1` and `MIF`. |
 | `restore_FigS12_ENO1_glycolysis_per_patient.R` | Final restoration script for Supplementary Figure S12 per-patient ENO1-glycolysis correlation. |
 | `revision_figure_restore/` | Final submission-ready clean vector figure restoration scripts after figure-level QC, renumbering, and vector-output restoration. |
+
+## Early-script repair status
+
+The early single-cell scripts have the following current maintenance status:
+
+| Script | Repair status |
+|---|---|
+| `02_glycolysis_scoring.R` | Current and retained. It is a locked assignment/QC script based on existing `Glycolysis_AUC`. Do not replace it with a re-scoring script unless a full AUCell recomputation is intentionally required. |
+| `03_cellchat_analysis.R` | Repaired. Uses `seurat_final.rds` and locked metadata columns; exports CellChat source/QC outputs rather than direct manuscript figures. |
+| `05_GSE125449_validation.R` | Repaired. Removes local paths and fixed hepatocyte cluster IDs; uses annotation or marker scoring to identify hepatocyte-like cells. |
+| `06_inferCNV_malignant.R` | Repaired. Removes local paths and obsolete labels; performs marker-score QC and optional inferCNV only when required local dependencies exist. |
+| `01_QC_clustering.R` | Not revised in this round. Leave as the upstream object-building script unless the full object-generation workflow is being re-audited. |
 
 ## Source/QC-first figure policy
 
@@ -163,6 +175,30 @@ Expected within-sample median group counts are:
 
 Spatial conclusions should be described as spot-level tissue co-enrichment. They should not be overstated as same-cell co-expression, tumor-cell-specific ligand production, or direct ligand-receptor contact.
 
+## GSE125449 validation notes
+
+`05_GSE125449_validation.R` is now a source/QC-first validation workflow. It should be interpreted as a validation analysis rather than a manuscript-locked figure restoration script.
+
+Key safeguards:
+
+- No `D:/scRNA_project` local path is required.
+- Fixed hepatocyte cluster IDs are not used.
+- Existing annotation is preferred when available.
+- Marker scoring is used only when a suitable annotation column is absent.
+- GlycoHigh/GlycoLow is defined by median split within hepatocyte-like cells in the validation dataset.
+
+## inferCNV / malignant hepatocyte notes
+
+`06_inferCNV_malignant.R` is now a current-object source/QC workflow with optional inferCNV.
+
+Key safeguards:
+
+- Tumor-derived hepatocytes are selected using `site == "Tumor" & cell_type == "Hepatocyte"`.
+- The locked expected tumor-derived hepatocyte count is `15,391`.
+- The script writes marker-score source/QC outputs even when inferCNV is not available.
+- inferCNV runs only if the `infercnv` package and a local `hg38_gencode_v27.txt` gene-order file are available.
+- The script does not automatically download gene-order files.
+
 ## GSE235863 exploratory response analysis
 
 `12_drug_repurposing.R` currently represents an exploratory anti-PD-1 plus lenvatinib non-response association analysis, not a drug-repurposing prioritization analysis.
@@ -192,3 +228,4 @@ Locked exploratory values:
 - Do not use README text as evidence that a script has already been committed; verify the actual file on `main`.
 - For locked figures, do not replace manuscript-matched results unless the exact source objects and QC targets are available.
 - Legacy or pending-review scripts should not be used to overwrite locked figure outputs without a new, documented QC pass.
+- Do not replace the current `02_glycolysis_scoring.R` with a re-scoring/recalculation script unless the goal is an explicit full AUCell recomputation and new downstream QC.
