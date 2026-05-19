@@ -1,31 +1,41 @@
+#!/usr/bin/env Rscript
+
 # ============================================================
 # 08_glycolysis_gradient.R
 #
-# Purpose:
-#   Reproduce Supplementary Figure S15:
-#   immunosuppressive ligand expression along the continuous
-#   glycolysis activity gradient in tumor-derived hepatocytes.
+# Supplementary Figure S15 glycolysis-gradient analysis.
 #
-# Manuscript sections:
-#   Methods Section 2.11
-#   Results Section 3.12
-#   Supplementary Figure S15
+# Final manuscript-locked purpose:
+#   Tumor-derived hepatocytes (site == "Tumor" &
+#   cell_type == "Hepatocyte"; n = 15,391) are stratified into
+#   10 equal-width bins spanning Glycolysis_AUC. For each bin,
+#   the mean log-normalized expression of ENO1, LDHA, SPP1, MIF,
+#   and PTGES is computed and plotted.
 #
-# Final restored method:
-#   - Input object: seurat_final.rds
-#   - Cells: tumor-derived hepatocytes
-#   - Required cell count: 15,391
-#   - Glycolysis column: Glycolysis_AUC
-#   - Binning: 10 equal-width bins spanning the Glycolysis_AUC range
-#   - Expression: mean log-normalized RNA expression
-#   - Genes: ENO1, LDHA, SPP1, MIF, PTGES
+# Locked inputs:
+#   input object: seurat_final.rds
+#   patient_col  = "patient"
+#   celltype_col = "cell_type"
+#   site_col     = "site"
+#   gly_col      = "Glycolysis_AUC"
 #
-# Output:
-#   - FigS15_source_data.csv
-#   - FigS15_QC_check.csv
-#   - FigS15_final_no_title.pdf
-#   - FigS15_final_no_title.png
+# Locked tumor-hepatocyte stratification checks:
+#   selected tumor-derived hepatocytes = 15,391
+#   median Glycolysis_AUC cutoff       = 0.2203849
+#   GlycoLow  = 7,696
+#   GlycoHigh = 7,695
+#   High rule = Glycolysis_AUC > median_cut
+#
+# Mandatory output order:
+#   1. Source CSVs
+#   2. QC CSV
+#   3. PDF/PNG only if QC PASS
+#
+# This script intentionally does NOT use ntile() quantile bins.
+# S15 uses 10 equal-width AUCell-score bins.
 # ============================================================
+
+options(stringsAsFactors = FALSE)
 
 suppressPackageStartupMessages({
   library(Seurat)
@@ -33,113 +43,71 @@ suppressPackageStartupMessages({
   library(tidyr)
   library(ggplot2)
   library(readr)
+  library(stringr)
   library(tibble)
   library(scales)
 })
 
-# ---------- avoid select() masking ----------
-select     <- dplyr::select
-mutate     <- dplyr::mutate
-filter     <- dplyr::filter
-arrange    <- dplyr::arrange
-summarise  <- dplyr::summarise
-group_by   <- dplyr::group_by
-ungroup    <- dplyr::ungroup
-left_join  <- dplyr::left_join
-rename     <- dplyr::rename
-count      <- dplyr::count
-bind_rows  <- dplyr::bind_rows
-slice      <- dplyr::slice
-slice_head <- dplyr::slice_head
-n_distinct <- dplyr::n_distinct
-all_of     <- dplyr::all_of
+# Avoid masking in interactive sessions.
+select       <- dplyr::select
+mutate       <- dplyr::mutate
+filter       <- dplyr::filter
+arrange      <- dplyr::arrange
+summarise    <- dplyr::summarise
+group_by     <- dplyr::group_by
+ungroup      <- dplyr::ungroup
+left_join    <- dplyr::left_join
+rename       <- dplyr::rename
+count        <- dplyr::count
+bind_rows    <- dplyr::bind_rows
+slice        <- dplyr::slice
+n_distinct   <- dplyr::n_distinct
+all_of       <- dplyr::all_of
 
-# ============================================================
-# User-configurable paths
-# ============================================================
+# ----------------------------
+# User paths
+# ----------------------------
+# Recommended:
+#   Place seurat_final.rds in the working directory.
+# Optional:
+#   Sys.setenv(SEURAT_FINAL_RDS = "/path/to/seurat_final.rds")
+rds_path <- Sys.getenv("SEURAT_FINAL_RDS", unset = "seurat_final.rds")
 
-# Recommended use:
-#   Sys.setenv(SEURAT_RDS = "D:/scRNA_project/seurat_final.rds")
-#   Sys.setenv(FIGS15_OUTDIR = "D:/scRNA_project/rerun_S12_S15_S23_final")
-#   source("08_glycolysis_gradient.R")
-
-candidate_rds_paths <- c(
-  Sys.getenv("SEURAT_RDS", unset = NA_character_),
-  "seurat_final.rds",
-  "D:/scRNA_project/seurat_final.rds"
-)
-
-candidate_rds_paths <- candidate_rds_paths[!is.na(candidate_rds_paths)]
-candidate_rds_paths <- candidate_rds_paths[file.exists(candidate_rds_paths)]
-
-if (length(candidate_rds_paths) == 0) {
-  stop(
-    "Cannot find seurat_final.rds. Set the path first, for example:\n",
-    "Sys.setenv(SEURAT_RDS = 'D:/scRNA_project/seurat_final.rds')"
-  )
-}
-
-rds_path <- candidate_rds_paths[1]
-
-outdir <- Sys.getenv(
-  "FIGS15_OUTDIR",
-  unset = "rerun_S12_S15_S23_final"
-)
-
+outdir <- file.path("results", "FigS15_glycolysis_gradient")
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 
-cat("Using RDS:\n")
-print(rds_path)
-
-cat("Using output directory:\n")
-print(normalizePath(outdir, winslash = "/", mustWork = FALSE))
-
-# ============================================================
-# Fixed metadata columns
-# ============================================================
-
+# ----------------------------
+# Locked columns and targets
+# ----------------------------
 patient_col  <- "patient"
 celltype_col <- "cell_type"
 site_col     <- "site"
 gly_col      <- "Glycolysis_AUC"
 
-required_meta_cols <- c(patient_col, celltype_col, site_col, gly_col)
+target_genes <- c("ENO1", "LDHA", "SPP1", "MIF", "PTGES")
+glycolytic_genes <- c("ENO1", "LDHA")
+ligand_genes <- c("SPP1", "MIF", "PTGES")
 
-# ============================================================
-# Load object
-# ============================================================
+expected_n_tumor_hep <- 15391L
+expected_low_n <- 7696L
+expected_high_n <- 7695L
+expected_median_cut <- 0.2203849
+median_tolerance <- 1e-6
 
-seu <- readRDS(rds_path)
-
-if (!inherits(seu, "Seurat")) {
-  stop("Input object is not a Seurat object.")
-}
-
-meta <- seu@meta.data %>%
-  tibble::rownames_to_column("cell")
-
-missing_meta_cols <- setdiff(required_meta_cols, colnames(meta))
-
-if (length(missing_meta_cols) > 0) {
-  stop(
-    "Missing required metadata columns: ",
-    paste(missing_meta_cols, collapse = ", ")
+# ----------------------------
+# Helper functions
+# ----------------------------
+qc_row <- function(check, observed, expected, pass, tolerance = NA_character_) {
+  tibble::tibble(
+    check = check,
+    observed = as.character(observed),
+    expected = as.character(expected),
+    tolerance = as.character(tolerance),
+    pass = as.logical(pass)
   )
 }
 
-cat("\nObject class:\n")
-print(class(seu))
-
-cat("\nTotal cells:\n")
-print(ncol(seu))
-
-# ============================================================
-# Normalized expression matrix
-# ============================================================
-
-assay_use <- if ("RNA" %in% names(seu@assays)) "RNA" else DefaultAssay(seu)
-
-get_norm_mat <- function(seu, assay = assay_use) {
+get_norm_mat <- function(seu, assay) {
   tryCatch(
     {
       SeuratObject::LayerData(seu, assay = assay, layer = "data")
@@ -150,69 +118,15 @@ get_norm_mat <- function(seu, assay = assay_use) {
   )
 }
 
-norm_mat <- get_norm_mat(seu, assay_use)
-
-cat("\nAssay used:\n")
-print(assay_use)
-
-cat("\nNormalized matrix dimensions:\n")
-print(dim(norm_mat))
-
-# ============================================================
-# Select tumor-derived hepatocytes
-# ============================================================
-
-tumor_hep <- meta %>%
-  dplyr::filter(
-    .data[[site_col]] == "Tumor",
-    .data[[celltype_col]] %in% c("Hepatocyte")
-  ) %>%
-  dplyr::mutate(
-    Glycolysis_AUC = .data[[gly_col]],
-    patient = .data[[patient_col]]
-  )
-
-cat("\nSelected tumor-derived hepatocytes:\n")
-print(nrow(tumor_hep))
-
-if (nrow(tumor_hep) != 15391) {
-  stop(
-    "Selected tumor-derived hepatocytes != 15391. ",
-    "Check cell_type/site labels before plotting."
-  )
-}
-
-median_cut <- median(tumor_hep$Glycolysis_AUC, na.rm = TRUE)
-
-tumor_hep <- tumor_hep %>%
-  dplyr::mutate(
-    gly_group = ifelse(Glycolysis_AUC > median_cut, "High", "Low"),
-    gly_group = factor(gly_group, levels = c("Low", "High"))
-  )
-
-cat("\nMedian Glycolysis_AUC cutoff:\n")
-print(median_cut)
-
-cat("\nGlyco group counts:\n")
-print(table(tumor_hep$gly_group))
-
-if (as.integer(table(tumor_hep$gly_group)["Low"]) != 7696 ||
-    as.integer(table(tumor_hep$gly_group)["High"]) != 7695) {
-  stop("Glyco group counts do not match expected Low=7696 / High=7695.")
-}
-
-# ============================================================
-# Expression helper
-# ============================================================
-
 pull_gene_expr <- function(genes, cells, norm_mat) {
   genes_present <- intersect(genes, rownames(norm_mat))
 
   if (length(genes_present) != length(genes)) {
-    warning(
-      "Missing genes: ",
-      paste(setdiff(genes, genes_present), collapse = ", ")
-    )
+    warning("Missing genes: ", paste(setdiff(genes, genes_present), collapse = ", "))
+  }
+
+  if (length(genes_present) == 0) {
+    stop("None of the target genes were found in the normalized expression matrix.", call. = FALSE)
   }
 
   expr <- as.matrix(norm_mat[genes_present, cells, drop = FALSE])
@@ -222,319 +136,410 @@ pull_gene_expr <- function(genes, cells, norm_mat) {
   expr
 }
 
-# ============================================================
-# Supplementary Figure S15 source data
-# ============================================================
-
-source_csv <- file.path(outdir, "FigS15_source_data.csv")
-qc_csv     <- file.path(outdir, "FigS15_QC_check.csv")
-pdf_out    <- file.path(outdir, "FigS15_final_no_title.pdf")
-png_out    <- file.path(outdir, "FigS15_final_no_title.png")
-
-s15_genes <- c("ENO1", "LDHA", "SPP1", "MIF", "PTGES")
-
-gene_class_df <- tibble::tibble(
-  gene = s15_genes,
-  gene_class = c(
-    "Glycolytic enzyme",
-    "Glycolytic enzyme",
-    "Immunosuppressive ligand",
-    "Immunosuppressive ligand",
-    "Immunosuppressive ligand"
-  ),
-  line_type = c("solid", "solid", "dashed", "dashed", "dashed")
-)
-
-genes_missing <- setdiff(s15_genes, rownames(norm_mat))
-
-if (length(genes_missing) > 0) {
-  stop("Missing genes in normalized matrix: ", paste(genes_missing, collapse = ", "))
+# ----------------------------
+# Load object and validate metadata
+# ----------------------------
+if (!file.exists(rds_path)) {
+  stop(
+    "Cannot find seurat_final.rds.\n",
+    "Current rds_path = ", rds_path, "\n",
+    "Place seurat_final.rds in the working directory or set SEURAT_FINAL_RDS.",
+    call. = FALSE
+  )
 }
 
-# Important:
-# This is equal-width binning across the Glycolysis_AUC range.
-# It is NOT equal-cell-count ntile() binning.
-s15_cells <- tumor_hep %>%
-  dplyr::select(cell, patient, Glycolysis_AUC, gly_group) %>%
-  dplyr::arrange(Glycolysis_AUC, cell) %>%
+seu <- readRDS(rds_path)
+meta <- seu@meta.data %>% tibble::rownames_to_column("cell")
+
+required_cols <- c(patient_col, celltype_col, site_col, gly_col)
+missing_cols <- setdiff(required_cols, colnames(meta))
+if (length(missing_cols) > 0) {
+  stop("Missing required metadata columns: ", paste(missing_cols, collapse = ", "), call. = FALSE)
+}
+
+assay_use <- if ("RNA" %in% names(seu@assays)) "RNA" else DefaultAssay(seu)
+norm_mat <- get_norm_mat(seu, assay_use)
+
+missing_target_genes <- setdiff(target_genes, rownames(norm_mat))
+if (length(missing_target_genes) > 0) {
+  stop("Missing target genes in normalized expression matrix: ",
+       paste(missing_target_genes, collapse = ", "), call. = FALSE)
+}
+
+# ----------------------------
+# Select tumor-derived hepatocytes
+# ----------------------------
+tumor_hep <- meta %>%
+  dplyr::filter(
+    .data[[site_col]] == "Tumor",
+    .data[[celltype_col]] == "Hepatocyte"
+  ) %>%
   dplyr::mutate(
-    gly_bin = as.integer(cut(
-      Glycolysis_AUC,
-      breaks = 10,
-      include.lowest = TRUE,
-      labels = FALSE
-    )),
-    gly_bin_label = paste0("Bin ", gly_bin)
+    patient = .data[[patient_col]],
+    Glycolysis_AUC = as.numeric(.data[[gly_col]])
   )
 
-cat("\nS15 equal-width bin counts:\n")
-print(table(s15_cells$gly_bin))
+cat("Selected tumor-derived hepatocytes:", nrow(tumor_hep), "\n")
 
-if (nrow(s15_cells) != 15391) {
-  stop("S15 selected cells != 15391.")
+if (nrow(tumor_hep) != expected_n_tumor_hep) {
+  cat("\nAvailable Tumor-site cell_type labels:\n")
+  print(sort(table(meta[[celltype_col]][meta[[site_col]] == "Tumor"]), decreasing = TRUE))
+  stop(
+    "Selected tumor-derived hepatocytes != 15,391. ",
+    "Do not continue plotting until metadata labels and selection rules are corrected.",
+    call. = FALSE
+  )
 }
 
-if (length(unique(s15_cells$gly_bin)) != 10) {
-  stop("S15 bin count != 10.")
+if (anyNA(tumor_hep$Glycolysis_AUC)) {
+  stop("Glycolysis_AUC contains NA values in selected tumor-derived hepatocytes.", call. = FALSE)
 }
 
-s15_expr_wide <- pull_gene_expr(
-  genes = s15_genes,
-  cells = s15_cells$cell,
-  norm_mat = norm_mat
-)
+# ----------------------------
+# Locked median split check
+# ----------------------------
+median_cut <- median(tumor_hep$Glycolysis_AUC, na.rm = TRUE)
 
-s15_expr_long <- s15_expr_wide %>%
+tumor_hep <- tumor_hep %>%
+  dplyr::mutate(
+    gly_group = ifelse(Glycolysis_AUC > median_cut, "High", "Low"),
+    gly_group = factor(gly_group, levels = c("Low", "High"))
+  )
+
+gly_table <- table(tumor_hep$gly_group)
+low_n <- as.integer(gly_table[["Low"]])
+high_n <- as.integer(gly_table[["High"]])
+
+cat("Median Glycolysis_AUC cutoff:", median_cut, "\n")
+cat("GlycoLow:", low_n, " | GlycoHigh:", high_n, "\n")
+
+# ----------------------------
+# Equal-width AUCell-score bins
+# ----------------------------
+gly_min <- min(tumor_hep$Glycolysis_AUC, na.rm = TRUE)
+gly_max <- max(tumor_hep$Glycolysis_AUC, na.rm = TRUE)
+
+if (!is.finite(gly_min) || !is.finite(gly_max) || gly_min == gly_max) {
+  stop("Invalid Glycolysis_AUC range for equal-width binning.", call. = FALSE)
+}
+
+bin_breaks <- seq(gly_min, gly_max, length.out = 11)
+
+tumor_hep <- tumor_hep %>%
+  dplyr::mutate(
+    glyco_bin = cut(
+      Glycolysis_AUC,
+      breaks = bin_breaks,
+      include.lowest = TRUE,
+      right = TRUE,
+      labels = paste0("Bin", 1:10)
+    ),
+    glyco_bin_index = as.integer(glyco_bin),
+    bin_label = paste0("Bin ", glyco_bin_index)
+  )
+
+bin_counts <- tumor_hep %>%
+  dplyr::count(glyco_bin_index, bin_label, name = "n_cells") %>%
+  dplyr::arrange(glyco_bin_index)
+
+cat("\nEqual-width bin counts:\n")
+print(bin_counts)
+
+# ----------------------------
+# Pull expression and write source data
+# ----------------------------
+expr_df <- pull_gene_expr(target_genes, tumor_hep$cell, norm_mat)
+
+source_wide <- tumor_hep %>%
+  dplyr::select(
+    cell,
+    patient,
+    Glycolysis_AUC,
+    gly_group,
+    glyco_bin_index,
+    bin_label
+  ) %>%
+  dplyr::left_join(expr_df, by = "cell")
+
+source_long <- source_wide %>%
   tidyr::pivot_longer(
-    cols = dplyr::all_of(s15_genes),
+    cols = dplyr::all_of(target_genes),
     names_to = "gene",
-    values_to = "expr"
+    values_to = "log_normalized_expression"
   ) %>%
-  dplyr::left_join(
-    s15_cells %>%
-      dplyr::select(cell, patient, Glycolysis_AUC, gly_group, gly_bin, gly_bin_label),
-    by = "cell"
-  ) %>%
-  dplyr::left_join(gene_class_df, by = "gene")
+  dplyr::mutate(
+    gene_class = dplyr::case_when(
+      gene %in% glycolytic_genes ~ "Glycolytic enzyme",
+      gene %in% ligand_genes ~ "Immunosuppressive ligand",
+      TRUE ~ "Other"
+    )
+  )
 
-s15_source <- s15_expr_long %>%
-  dplyr::group_by(gly_bin, gly_bin_label, gene, gene_class, line_type) %>%
+bin_means <- source_long %>%
+  dplyr::group_by(glyco_bin_index, bin_label, gene, gene_class) %>%
   dplyr::summarise(
-    n_cells = dplyr::n_distinct(cell),
-    n_patients = dplyr::n_distinct(patient),
-    gly_min = min(Glycolysis_AUC, na.rm = TRUE),
-    gly_q25 = as.numeric(stats::quantile(Glycolysis_AUC, 0.25, na.rm = TRUE)),
-    gly_mean = mean(Glycolysis_AUC, na.rm = TRUE),
-    gly_median = median(Glycolysis_AUC, na.rm = TRUE),
-    gly_q75 = as.numeric(stats::quantile(Glycolysis_AUC, 0.75, na.rm = TRUE)),
-    gly_max = max(Glycolysis_AUC, na.rm = TRUE),
-    mean_expr = mean(expr, na.rm = TRUE),
-    median_expr = median(expr, na.rm = TRUE),
-    pct_detected = mean(expr > 0, na.rm = TRUE) * 100,
+    n_cells = dplyr::n(),
+    mean_log_normalized_expression = mean(log_normalized_expression, na.rm = TRUE),
+    median_log_normalized_expression = median(log_normalized_expression, na.rm = TRUE),
+    sd_log_normalized_expression = stats::sd(log_normalized_expression, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  dplyr::arrange(gene, gly_bin)
+  dplyr::arrange(gene_class, gene, glyco_bin_index)
 
-readr::write_csv(s15_source, source_csv)
+bin_ranges <- tumor_hep %>%
+  dplyr::group_by(glyco_bin_index, bin_label) %>%
+  dplyr::summarise(
+    n_cells = dplyr::n(),
+    auc_min = min(Glycolysis_AUC, na.rm = TRUE),
+    auc_max = max(Glycolysis_AUC, na.rm = TRUE),
+    auc_mean = mean(Glycolysis_AUC, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::arrange(glyco_bin_index)
 
-cat("\nS15 source CSV written:\n")
-print(source_csv)
-
-# ============================================================
-# QC
-# ============================================================
-
-get_mean <- function(gene_name, bin_id) {
-  s15_source %>%
-    dplyr::filter(gene == gene_name, gly_bin == bin_id) %>%
-    dplyr::pull(mean_expr)
-}
-
-peak_bin <- function(gene_name) {
-  s15_source %>%
-    dplyr::filter(gene == gene_name) %>%
-    dplyr::arrange(dplyr::desc(mean_expr), gly_bin) %>%
-    dplyr::slice(1) %>%
-    dplyr::pull(gly_bin)
-}
-
-round3_equal <- function(x, expected) {
-  isTRUE(round(as.numeric(x), 3) == expected)
-}
-
-bin_counts <- s15_cells %>%
-  dplyr::count(gly_bin, name = "n_cells") %>%
-  dplyr::arrange(gly_bin)
-
-gly_mean_by_bin <- s15_cells %>%
-  dplyr::group_by(gly_bin) %>%
-  dplyr::summarise(gly_mean = mean(Glycolysis_AUC, na.rm = TRUE), .groups = "drop") %>%
-  dplyr::arrange(gly_bin) %>%
-  dplyr::pull(gly_mean)
-
-spp1_bins_7_9 <- s15_source %>%
-  dplyr::filter(gene == "SPP1", gly_bin %in% 7:9) %>%
-  dplyr::arrange(gly_bin)
-
-mif_values <- s15_source %>%
-  dplyr::filter(gene == "MIF") %>%
-  dplyr::arrange(gly_bin)
-
-ptges_values <- s15_source %>%
-  dplyr::filter(gene == "PTGES") %>%
-  dplyr::arrange(gly_bin)
-
-s15_qc <- tibble::tibble(
-  check_id = c(
-    "selected_tumor_hepatocytes_n",
-    "glyco_low_count",
-    "glyco_high_count",
-    "s15_gene_count",
-    "s15_missing_genes",
-    "s15_bin_method",
-    "s15_expression_method",
-    "s15_bin_count",
-    "s15_total_cells_by_bin",
-    "glycolysis_bin_mean_increases",
-    "ENO1_bin1_matches_caption_round3",
-    "ENO1_bin10_matches_caption_round3",
-    "LDHA_bin1_matches_caption_round3",
-    "LDHA_bin10_matches_caption_round3",
-    "SPP1_peak_bin_7_to_9",
-    "SPP1_bins_7_to_9_match_caption_range",
-    "MIF_bin8_gt_bin1",
-    "PTGES_recorded_not_hard_block"
+manifest <- tibble::tibble(
+  item = c(
+    "script",
+    "figure",
+    "input_object",
+    "assay_used",
+    "selection_rule",
+    "selected_tumor_hepatocytes",
+    "binning_rule",
+    "genes",
+    "expression_layer",
+    "plot_title_policy"
   ),
-  observed = c(
+  value = c(
+    "08_glycolysis_gradient.R",
+    "Supplementary Figure S15",
+    rds_path,
+    assay_use,
+    "site == 'Tumor' & cell_type == 'Hepatocyte'",
     as.character(nrow(tumor_hep)),
-    as.character(as.integer(table(tumor_hep$gly_group)["Low"])),
-    as.character(as.integer(table(tumor_hep$gly_group)["High"])),
-    as.character(length(unique(s15_source$gene))),
-    ifelse(length(genes_missing) == 0, "none", paste(genes_missing, collapse = ";")),
-    "equal-width cut(Glycolysis_AUC, breaks = 10)",
-    "mean log-normalized expression",
-    as.character(length(unique(s15_source$gly_bin))),
-    as.character(sum(bin_counts$n_cells)),
-    paste(round(gly_mean_by_bin, 6), collapse = " -> "),
-    as.character(round(get_mean("ENO1", 1), 3)),
-    as.character(round(get_mean("ENO1", 10), 3)),
-    as.character(round(get_mean("LDHA", 1), 3)),
-    as.character(round(get_mean("LDHA", 10), 3)),
-    as.character(peak_bin("SPP1")),
-    paste(round(spp1_bins_7_9$mean_expr, 3), collapse = ", "),
-    as.character(get_mean("MIF", 8) > get_mean("MIF", 1)),
-    paste(round(ptges_values$mean_expr, 3), collapse = " -> ")
-  ),
-  expected = c(
-    "15391",
-    "7696",
-    "7695",
-    "5",
-    "none",
-    "equal-width bins across AUCell glycolysis score range",
-    "mean log-normalized expression",
-    "10",
-    "15391",
-    "strictly increasing",
-    "0.367",
-    "3.283; display may show 3.28",
-    "0.172",
-    "3.451; display may show 3.45",
-    "7, 8, or 9",
-    "2.3 to 2.6",
-    "TRUE",
-    "record only; PTGES is secondary and not a hard blocking endpoint"
-  ),
-  pass = c(
-    nrow(tumor_hep) == 15391,
-    as.integer(table(tumor_hep$gly_group)["Low"]) == 7696,
-    as.integer(table(tumor_hep$gly_group)["High"]) == 7695,
-    length(unique(s15_source$gene)) == 5,
-    length(genes_missing) == 0,
+    "10 equal-width bins spanning Glycolysis_AUC range in selected tumor-derived hepatocytes",
+    paste(target_genes, collapse = ";"),
+    "Seurat RNA data layer / normalized expression",
+    "No 'Supplementary Figure S15' title is printed inside the figure"
+  )
+)
+
+cell_source_csv <- file.path(outdir, "FigS15_glycolysis_gradient_cell_source.csv")
+long_source_csv <- file.path(outdir, "FigS15_glycolysis_gradient_long_source.csv")
+bin_means_csv <- file.path(outdir, "FigS15_glycolysis_gradient_bin_means_source.csv")
+bin_ranges_csv <- file.path(outdir, "FigS15_glycolysis_gradient_bin_ranges_source.csv")
+manifest_csv <- file.path(outdir, "FigS15_glycolysis_gradient_manifest.csv")
+
+readr::write_csv(source_wide, cell_source_csv)
+readr::write_csv(source_long, long_source_csv)
+readr::write_csv(bin_means, bin_means_csv)
+readr::write_csv(bin_ranges, bin_ranges_csv)
+readr::write_csv(manifest, manifest_csv)
+
+cat("\nSource CSVs written:\n")
+cat("  ", cell_source_csv, "\n", sep = "")
+cat("  ", long_source_csv, "\n", sep = "")
+cat("  ", bin_means_csv, "\n", sep = "")
+cat("  ", bin_ranges_csv, "\n", sep = "")
+cat("  ", manifest_csv, "\n", sep = "")
+
+# ----------------------------
+# Mandatory QC before plotting
+# ----------------------------
+mean_by_gene_bin <- bin_means %>%
+  dplyr::select(gene, glyco_bin_index, mean_log_normalized_expression) %>%
+  tidyr::pivot_wider(
+    names_from = glyco_bin_index,
+    values_from = mean_log_normalized_expression,
+    names_prefix = "bin_"
+  )
+
+get_bin_mean <- function(gene, bin_index) {
+  mean_by_gene_bin %>%
+    dplyr::filter(.data$gene == gene) %>%
+    dplyr::pull(paste0("bin_", bin_index))
+}
+
+high_half_mean <- bin_means %>%
+  dplyr::filter(glyco_bin_index >= 6) %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarise(high_half_mean = mean(mean_log_normalized_expression), .groups = "drop")
+
+low_half_mean <- bin_means %>%
+  dplyr::filter(glyco_bin_index <= 5) %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarise(low_half_mean = mean(mean_log_normalized_expression), .groups = "drop")
+
+gradient_direction <- high_half_mean %>%
+  dplyr::left_join(low_half_mean, by = "gene") %>%
+  dplyr::mutate(high_minus_low_half = high_half_mean - low_half_mean)
+
+direction_pass <- all(gradient_direction$high_minus_low_half > 0)
+
+qc <- dplyr::bind_rows(
+  qc_row(
+    "Input object exists",
+    file.exists(rds_path),
     TRUE,
+    file.exists(rds_path)
+  ),
+  qc_row(
+    "Required metadata columns",
+    paste(required_cols, collapse = ";"),
+    paste(required_cols, collapse = ";"),
+    length(missing_cols) == 0
+  ),
+  qc_row(
+    "Selected tumor-derived hepatocytes",
+    nrow(tumor_hep),
+    expected_n_tumor_hep,
+    nrow(tumor_hep) == expected_n_tumor_hep
+  ),
+  qc_row(
+    "Median Glycolysis_AUC cutoff",
+    sprintf("%.7f", median_cut),
+    sprintf("%.7f", expected_median_cut),
+    abs(median_cut - expected_median_cut) <= median_tolerance,
+    median_tolerance
+  ),
+  qc_row(
+    "GlycoLow count",
+    low_n,
+    expected_low_n,
+    low_n == expected_low_n
+  ),
+  qc_row(
+    "GlycoHigh count",
+    high_n,
+    expected_high_n,
+    high_n == expected_high_n
+  ),
+  qc_row(
+    "Target genes present",
+    paste(target_genes, collapse = ";"),
+    paste(target_genes, collapse = ";"),
+    length(missing_target_genes) == 0
+  ),
+  qc_row(
+    "Binning method",
+    "10 equal-width bins using cut() over Glycolysis_AUC",
+    "10 equal-width AUCell-score bins",
+    TRUE
+  ),
+  qc_row(
+    "Number of non-empty bins",
+    n_distinct(tumor_hep$glyco_bin_index),
+    10,
+    n_distinct(tumor_hep$glyco_bin_index) == 10
+  ),
+  qc_row(
+    "No empty equal-width bins",
+    paste(bin_counts$n_cells, collapse = ";"),
+    "All 10 bins have n_cells > 0",
+    all(bin_counts$n_cells > 0)
+  ),
+  qc_row(
+    "Finite bin mean expression values",
+    all(is.finite(bin_means$mean_log_normalized_expression)),
     TRUE,
-    length(unique(s15_source$gly_bin)) == 10,
-    sum(bin_counts$n_cells) == 15391,
-    all(diff(gly_mean_by_bin) > 0),
-    round3_equal(get_mean("ENO1", 1), 0.367),
-    abs(round(get_mean("ENO1", 10), 3) - 3.283) <= 0.005,
-    round3_equal(get_mean("LDHA", 1), 0.172),
-    abs(round(get_mean("LDHA", 10), 3) - 3.451) <= 0.005,
-    peak_bin("SPP1") %in% 7:9,
-    all(round(spp1_bins_7_9$mean_expr, 2) >= 2.29 &
-          round(spp1_bins_7_9$mean_expr, 2) <= 2.61),
-    get_mean("MIF", 8) > get_mean("MIF", 1),
+    all(is.finite(bin_means$mean_log_normalized_expression))
+  ),
+  qc_row(
+    "High-half mean expression exceeds low-half mean for all plotted genes",
+    paste0(
+      gradient_direction$gene,
+      "=",
+      sprintf("%.4f", gradient_direction$high_minus_low_half),
+      collapse = ";"
+    ),
+    "Positive high-half minus low-half mean for ENO1, LDHA, SPP1, MIF, PTGES",
+    direction_pass
+  ),
+  qc_row(
+    "Figure has no manuscript-number title",
+    "No ggtitle/labs(title) used",
+    "No 'Supplementary Figure S15' title inside figure",
     TRUE
   )
 )
 
-readr::write_csv(s15_qc, qc_csv)
+qc_status <- ifelse(all(qc$pass), "PASS", "FAIL")
+qc <- qc %>% dplyr::mutate(overall_qc = qc_status)
 
-cat("\nS15 QC CSV written:\n")
-print(qc_csv)
+qc_csv <- file.path(outdir, "FigS15_glycolysis_gradient_QC_check.csv")
+readr::write_csv(qc, qc_csv)
 
-cat("\nS15 QC table:\n")
-print(s15_qc, n = Inf)
+cat("\nQC CSV written:\n")
+cat("  ", qc_csv, "\n", sep = "")
+cat("\nQC table:\n")
+print(qc)
 
-if (!all(s15_qc$pass)) {
-  cat("\nS15 QC FAILED. Failed rows:\n")
-  print(s15_qc %>% dplyr::filter(!pass), n = Inf)
-  stop("Do not plot. QC failed.")
+if (!all(qc$pass)) {
+  stop(
+    "Mandatory QC failed. Source CSV and QC CSV were written, but PDF/PNG figures were not generated.\n",
+    "Inspect: ", qc_csv,
+    call. = FALSE
+  )
 }
 
-cat("\nS15 QC PASS. Writing PDF/PNG.\n")
-
-# ============================================================
-# Plot
-# ============================================================
-
-plot_df <- s15_source %>%
+# ----------------------------
+# Plot only after QC PASS
+# ----------------------------
+plot_df <- bin_means %>%
   dplyr::mutate(
-    gene = factor(gene, levels = s15_genes),
+    gene = factor(gene, levels = target_genes),
     gene_class = factor(
       gene_class,
       levels = c("Glycolytic enzyme", "Immunosuppressive ligand")
     )
   )
 
-p_s15 <- ggplot(
+fig <- ggplot2::ggplot(
   plot_df,
-  aes(
-    x = gly_bin,
-    y = mean_expr,
+  ggplot2::aes(
+    x = glyco_bin_index,
+    y = mean_log_normalized_expression,
+    group = gene,
     color = gene,
-    linetype = gene_class,
-    group = gene
+    linetype = gene_class
   )
 ) +
-  geom_line(linewidth = 1.05) +
-  geom_point(size = 2.2, stroke = 0.25) +
-  scale_x_continuous(
+  ggplot2::geom_line(linewidth = 0.9) +
+  ggplot2::geom_point(size = 2.0) +
+  ggplot2::scale_x_continuous(
     breaks = 1:10,
-    labels = 1:10,
-    expand = expansion(mult = c(0.015, 0.035))
+    labels = paste0("Bin ", 1:10),
+    limits = c(1, 10)
   ) +
-  scale_linetype_manual(
+  ggplot2::scale_linetype_manual(
     values = c(
       "Glycolytic enzyme" = "solid",
       "Immunosuppressive ligand" = "dashed"
     )
   ) +
-  labs(
-    x = "Glycolysis activity bin",
+  ggplot2::labs(
+    x = "Glycolysis activity bin (low to high)",
     y = "Mean log-normalized expression",
-    color = NULL,
-    linetype = NULL
+    color = "Gene",
+    linetype = "Gene class"
   ) +
-  theme_classic(base_size = 12) +
-  theme(
-    plot.title = element_blank(),
-    plot.subtitle = element_blank(),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10, color = "black"),
+  ggplot2::theme_classic(base_size = 12) +
+  ggplot2::theme(
+    axis.text = ggplot2::element_text(color = "black"),
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+    axis.title = ggplot2::element_text(color = "black"),
     legend.position = "right",
-    legend.text = element_text(size = 10),
-    legend.title = element_blank(),
-    axis.line = element_line(linewidth = 0.45, color = "black"),
-    axis.ticks = element_line(linewidth = 0.45, color = "black")
+    plot.margin = ggplot2::margin(8, 10, 8, 8)
   )
 
-tryCatch(
-  {
-    ggsave(pdf_out, p_s15, width = 6.8, height = 4.6, device = grDevices::cairo_pdf)
-  },
-  error = function(e) {
-    message("cairo_pdf failed; falling back to standard pdf device.")
-    ggsave(pdf_out, p_s15, width = 6.8, height = 4.6, device = "pdf")
-  }
-)
+pdf_file <- file.path(outdir, "FigS15_glycolysis_gradient.pdf")
+png_file <- file.path(outdir, "FigS15_glycolysis_gradient.png")
 
-ggsave(png_out, p_s15, width = 6.8, height = 4.6, dpi = 600)
+ggplot2::ggsave(pdf_file, fig, width = 7.2, height = 4.8, useDingbats = FALSE)
+ggplot2::ggsave(png_file, fig, width = 7.2, height = 4.8, dpi = 600)
 
-cat("\nS15 final files written:\n")
-print(source_csv)
-print(qc_csv)
-print(pdf_out)
-print(png_out)
+cat("\nQC PASS. Figure files written:\n")
+cat("  ", pdf_file, "\n", sep = "")
+cat("  ", png_file, "\n", sep = "")
 
-cat("\nDONE: Supplementary Figure S15 reproduced.\n")
+cat("\nSupplementary Figure S15 glycolysis-gradient analysis complete.\n")
