@@ -22,6 +22,7 @@ Analysis code for ENO1/glycolysis-immune evasion study in HCC
 | 13_revision_analyses.R | Revision-stage supplementary analyses (Figures S9–S13, S20) |
 | 14_OXPHOS_metabolic_specificity.R | OXPHOS AUCell scoring and metabolic specificity analysis (Section 2.15) |
 | 15_NicheNet_analysis.R | NicheNet ligand activity analysis (Section 2.16, Figure S23) |
+
 17_FigS21_partial_correlation_metabolic_specificity.R | Supplementary Fig. S21 partial Spearman correlation plot for glycolysis versus OXPHOS specificity
 
 ## Data
