@@ -395,3 +395,10 @@ ggsave("FigS13_TIDE_scores.png", p_s13, width = 9, height = 5, dpi = 300)
 cat("Supplementary Figure S13 saved.\n")
 
 cat("\n=== Script 04 complete ===\n")
+
+# Final submission clean vector versions of Fig5B-Fig6B are regenerated in:
+# revision_figure_restore/plot_Fig5B_ENO1_KM_optimal.R
+# revision_figure_restore/plot_Fig5C_ENO1_AJCC_stage.R
+# revision_figure_restore/plot_Fig5D_ENO1_Cox_forest.R
+# revision_figure_restore/plot_Fig6A_four_gene_score_KM.R
+# revision_figure_restore/plot_Fig6B_four_gene_score_Cox_forest.R
