@@ -36,8 +36,8 @@ These scripts reproduce selected final manuscript figures after figure-level qua
 Corrected final figure mapping:
 
 - Figure 8: benchmarking / model comparison.
-- - Supplementary Figure S12: per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes.
-  - Supplementary Figure S15: glycolysis-gradient expression of ENO1, LDHA, SPP1, MIF, and PTGES in tumor-derived hepatocytes, reproduced by `08_glycolysis_gradient.R`.
+- Supplementary Figure S12: per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes.
+- Supplementary Figure S15: glycolysis-gradient expression of ENO1, LDHA, SPP1, MIF, and PTGES in tumor-derived hepatocytes, reproduced by `08_glycolysis_gradient.R`.
 - Figure 9B: spatial GlycoHigh versus GlycoLow direction consistency.
 - Supplementary Figure S20: RCTD-estimated spatial cell-type composition.
 - Supplementary Figure S21: metabolic specificity / partial Spearman correlation.
