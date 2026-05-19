@@ -1,195 +1,599 @@
-# ============================================================
-# Script 03: Cell-Cell Communication Analysis (CellChat)
-# Section 2.6
-# Round 1: 6 original cell types (overall landscape)
-# Round 2: 7 groups (GlycoHigh/GlycoLow hepatocytes + 5 immune)
-# Round 3: Subtype-resolved (T/NK and myeloid subclustered)
-# ============================================================
+# =============================================================================
+# 03_cellchat_analysis.R
+#
+# Current purpose:
+#   Current-object CellChat analysis with locked metadata/QC guard.
+#
+# This replacement removes legacy local paths and obsolete labels:
+#   - no setwd("D:/scRNA_project")
+#   - no tumor_hepatocytes.rds dependency
+#   - no "Hepatocytes" plural label for tumor-derived hepatocytes
+#
+# Locked current-object convention:
+#   input object      = seurat_final.rds
+#   patient column    = patient
+#   cell-type column  = cell_type
+#   site column       = site
+#   glycolysis column = Glycolysis_AUC
+#
+# Tumor-derived hepatocytes:
+#   site == "Tumor" & cell_type == "Hepatocyte"
+#   n = 15,391
+#   median Glycolysis_AUC cutoff = 0.2203849
+#   GlycoHigh = Glycolysis_AUC > median_cut, n = 7,695
+#   GlycoLow  = remaining tumor-derived hepatocytes, n = 7,696
+#
+# CellChat rounds:
+#   Round 1: original cell_type communication landscape
+#   Round 2: GlycoHigh/GlycoLow tumor hepatocytes + remaining cell types
+#   Round 3: optional subtype-resolved run only if an explicit subtype column
+#            already exists in the object. This script does not de novo
+#            recluster T/NK or myeloid cells because that would create another
+#            moving target unless a subtype annotation has been QC-locked.
+#
+# Outputs:
+#   results/CellChat_03_qc.csv
+#   results/CellChat_03_input_cell_metadata.csv
+#   results/CellChat_03_round1_group_counts.csv
+#   results/CellChat_03_round2_group_counts.csv
+#   results/CellChat_03_round1.rds
+#   results/CellChat_03_round2_glyco.rds
+#   results/CellChat_03_round1_communication.csv
+#   results/CellChat_03_round2_glyco_communication.csv
+#   results/CellChat_03_round1_net_count.csv
+#   results/CellChat_03_round1_net_weight.csv
+#   results/CellChat_03_round2_glyco_net_count.csv
+#   results/CellChat_03_round2_glyco_net_weight.csv
+#   results/CellChat_03_round3_status.csv
+#   results/CellChat_03_manifest.csv
+#   results/CellChat_03_sessionInfo.txt
+#
+# Notes:
+#   This script does not generate manuscript figures directly.
+#   Figure generation should use exported source/QC tables or locked
+#   downstream figure-specific scripts.
+# =============================================================================
 
-library(Seurat)
-library(CellChat)
-library(tidyverse)
+options(stringsAsFactors = FALSE)
 
-setwd("D:/scRNA_project")
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
 
-seu        <- readRDS("seurat_final.rds")
-tumor_hepa <- readRDS("tumor_hepatocytes.rds")
+input_rds <- "seurat_final.rds"
+out_dir <- "results"
+dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-# ============================================================
-# Round 1: Overall communication using 6 original cell types
-# ============================================================
-cat("=== Round 1: Overall CellChat (6 cell types) ===\n")
+patient_col <- "patient"
+celltype_col <- "cell_type"
+site_col <- "site"
+gly_col <- "Glycolysis_AUC"
 
-data_input <- GetAssayData(seu, layer = "data")
-meta_r1    <- data.frame(cell_type = seu$cell_type,
-                         row.names = colnames(seu))
+expected_tumor_hepatocytes <- 15391L
+expected_median_cut <- 0.2203849
+expected_glyco_high <- 7695L
+expected_glyco_low <- 7696L
 
-cellchat <- createCellChat(object = data_input,
-                           meta   = meta_r1,
-                           group.by = "cell_type")
-cellchat@DB <- CellChatDB.human
+cellchat_min_cells <- 10L
+cellchat_nboot <- 1000L
 
-cellchat <- subsetData(cellchat)
-cellchat <- identifyOverExpressedGenes(cellchat)
-cellchat <- identifyOverExpressedInteractions(cellchat)
-cellchat <- computeCommunProb(cellchat, type = "triMean")
-cellchat <- filterCommunication(cellchat, min.cells = 10)
-cellchat <- computeCommunProbPathway(cellchat)
-cellchat <- aggregateNet(cellchat)
+# If TRUE, restrict CellChat database to secreted signaling interactions.
+# Keep FALSE to preserve the broader original CellChat landscape behavior.
+use_secreted_signaling_only <- FALSE
 
-saveRDS(cellchat, "hcc_cellchat_round1.rds")
-cat("Round 1 complete. Saved: hcc_cellchat_round1.rds\n")
+# -----------------------------------------------------------------------------
+# Utilities
+# -----------------------------------------------------------------------------
 
-# ============================================================
-# Round 2: Glycolysis-stratified (7 groups)
-# TumorGlycoHigh / TumorGlycoLow + 5 other cell types
-# ============================================================
-cat("\n=== Round 2: Glycolysis-stratified CellChat (7 groups) ===\n")
+write_csv <- function(x, filename) {
+  path <- file.path(out_dir, filename)
+  utils::write.csv(x, path, row.names = FALSE, quote = TRUE)
+  message("Wrote: ", normalizePath(path, winslash = "/", mustWork = FALSE))
+  invisible(path)
+}
 
-# Build cell_type_glyco: replace tumor hepatocytes with GlycoHigh/GlycoLow
-seu$cell_type_glyco <- seu$cell_type
+write_text <- function(lines, filename) {
+  path <- file.path(out_dir, filename)
+  writeLines(lines, con = path, useBytes = TRUE)
+  message("Wrote: ", normalizePath(path, winslash = "/", mustWork = FALSE))
+  invisible(path)
+}
 
-hepa_cells <- colnames(seu)[seu$cell_type == "Hepatocytes" &
-                               seu$site    == "Tumor"]
-cat("Tumor hepatocytes to recode:", length(hepa_cells), "\n")
+safe_chr <- function(x) {
+  x <- as.character(x)
+  x[is.na(x) | x == "" | x == "NA"] <- "Unknown"
+  x
+}
 
-# Align barcodes (tumor_hepa may be a subset of seu)
-shared_cells <- intersect(hepa_cells, colnames(tumor_hepa))
-seu$cell_type_glyco[shared_cells] <- tumor_hepa$glyco_group[shared_cells]
+matrix_to_long <- function(mat, value_col = "value") {
+  if (is.null(mat)) {
+    return(data.frame(source = character(), target = character(), value = numeric()))
+  }
+  df <- as.data.frame(as.table(as.matrix(mat)), stringsAsFactors = FALSE)
+  names(df) <- c("source", "target", value_col)
+  df
+}
 
-cat("GlycoHigh cells:", sum(seu$cell_type_glyco == "TumorGlycoHigh"), "\n")
-cat("GlycoLow  cells:", sum(seu$cell_type_glyco == "TumorGlycoLow"),  "\n")
+required_package <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    stop("Required package is not installed: ", pkg, call. = FALSE)
+  }
+}
 
-# ── BUG FIX: group.by must reference the glyco-stratified column ──
-meta_r2 <- data.frame(cell_type_glyco = seu$cell_type_glyco,
-                      row.names       = colnames(seu))
+get_expression_matrix <- function(seu, assay_use = NULL) {
+  if (is.null(assay_use)) {
+    assay_use <- Seurat::DefaultAssay(seu)
+    if ("RNA" %in% Seurat::Assays(seu)) {
+      assay_use <- "RNA"
+    }
+  }
 
-cellchat2 <- createCellChat(object   = GetAssayData(seu, layer = "data"),
-                            meta     = meta_r2,
-                            group.by = "cell_type_glyco")   # ← FIXED (was "cell_type")
-cellchat2@DB <- CellChatDB.human
+  message("Using assay: ", assay_use)
 
-cellchat2 <- subsetData(cellchat2)
-cellchat2 <- identifyOverExpressedGenes(cellchat2)
-cellchat2 <- identifyOverExpressedInteractions(cellchat2)
-cellchat2 <- computeCommunProb(cellchat2, type  = "triMean",
-                                           nboot = 1000)   # permutation test
-cellchat2 <- filterCommunication(cellchat2, min.cells = 10)
-cellchat2 <- computeCommunProbPathway(cellchat2)
-cellchat2 <- aggregateNet(cellchat2)
+  expr <- NULL
 
-saveRDS(cellchat2, "hcc_cellchat_round2_glyco.rds")
-cat("Round 2 complete. Saved: hcc_cellchat_round2_glyco.rds\n")
+  # SeuratObject::LayerData is preferred for Seurat v5 when available.
+  expr <- tryCatch(
+    {
+      if (requireNamespace("SeuratObject", quietly = TRUE) &&
+          "LayerData" %in% getNamespaceExports("SeuratObject")) {
+        SeuratObject::LayerData(seu, assay = assay_use, layer = "data")
+      } else {
+        NULL
+      }
+    },
+    error = function(e) NULL
+  )
 
-# ============================================================
-# Round 3: Subtype-resolved CellChat
-# T/NK and myeloid cells subclustered (Section 2.6, Supplementary Figure S5)
-# ============================================================
-cat("\n=== Round 3: Subtype-resolved CellChat ===\n")
+  # Seurat v5 GetAssayData(layer = "data")
+  if (is.null(expr)) {
+    expr <- tryCatch(
+      Seurat::GetAssayData(seu, assay = assay_use, layer = "data"),
+      error = function(e) NULL
+    )
+  }
 
-# ── Step 1: Subcluster T/NK cells ──
-tnk_cells <- subset(seu, cell_type %in% c("T_NK", "CD8T"))
-tnk_cells <- FindNeighbors(tnk_cells, reduction = "harmony", dims = 1:15)
-tnk_cells <- FindClusters(tnk_cells, resolution = 0.4)
+  # Seurat v4 fallback
+  if (is.null(expr)) {
+    expr <- tryCatch(
+      Seurat::GetAssayData(seu, assay = assay_use, slot = "data"),
+      error = function(e) NULL
+    )
+  }
 
-# Annotate T/NK subtypes based on marker expression
-# Exhausted T:      TIGIT, HAVCR2, TOX
-# Effector memory:  NKG7, CCR7
-# Activated T:      PDCD1, GZMB
-# NK cells:         KLRD1, GNLY
-# Naive T:          TCF7, SELL
-tnk_markers <- list(
-  TNK_Tex = c("TIGIT", "HAVCR2", "TOX"),
-  TNK_Tem = c("NKG7",  "CCR7"),
-  TNK_Tact= c("PDCD1", "GZMB"),
-  TNK_NK  = c("KLRD1", "GNLY"),
-  TNK_Tn  = c("TCF7",  "SELL")
-)
+  if (is.null(expr)) {
+    stop("Could not retrieve normalized expression matrix from assay: ", assay_use)
+  }
 
-# Score each cluster and assign subtype by highest mean score
-tnk_expr    <- GetAssayData(tnk_cells, layer = "data")
-cluster_ids <- levels(tnk_cells$seurat_clusters)
+  expr
+}
 
-tnk_subtype_map <- sapply(cluster_ids, function(cl) {
-  cl_cells <- colnames(tnk_cells)[tnk_cells$seurat_clusters == cl]
-  scores   <- sapply(tnk_markers, function(genes) {
-    g <- intersect(genes, rownames(tnk_expr))
-    if (length(g) == 0) return(0)
-    mean(colMeans(tnk_expr[g, cl_cells, drop = FALSE]))
-  })
-  names(which.max(scores))
+make_group_counts <- function(meta, group_col) {
+  tab <- sort(table(meta[[group_col]]), decreasing = TRUE)
+  data.frame(
+    group = names(tab),
+    n_cells = as.integer(tab),
+    stringsAsFactors = FALSE
+  )
+}
+
+run_cellchat_round <- function(expr, meta, group_col, prefix,
+                               min_cells = 10L,
+                               nboot = 1000L,
+                               use_secreted_only = FALSE) {
+  message("")
+  message("Running CellChat: ", prefix)
+  message("Grouping column: ", group_col)
+
+  group_counts <- make_group_counts(meta, group_col)
+  write_csv(group_counts, paste0(prefix, "_group_counts.csv"))
+
+  if (nrow(group_counts) < 2) {
+    stop("CellChat requires at least two groups for ", prefix, call. = FALSE)
+  }
+
+  cellchat <- CellChat::createCellChat(
+    object = expr,
+    meta = meta,
+    group.by = group_col
+  )
+
+  db_use <- CellChat::CellChatDB.human
+  if (isTRUE(use_secreted_only)) {
+    db_use <- CellChat::subsetDB(db_use, search = "Secreted Signaling")
+  }
+  cellchat@DB <- db_use
+
+  cellchat <- CellChat::subsetData(cellchat)
+  cellchat <- CellChat::identifyOverExpressedGenes(cellchat)
+  cellchat <- CellChat::identifyOverExpressedInteractions(cellchat)
+
+  cellchat <- CellChat::computeCommunProb(
+    cellchat,
+    type = "triMean",
+    nboot = nboot
+  )
+
+  cellchat <- CellChat::filterCommunication(
+    cellchat,
+    min.cells = min_cells
+  )
+
+  cellchat <- CellChat::computeCommunProbPathway(cellchat)
+  cellchat <- CellChat::aggregateNet(cellchat)
+
+  rds_file <- file.path(out_dir, paste0(prefix, ".rds"))
+  saveRDS(cellchat, rds_file)
+  message("Wrote: ", normalizePath(rds_file, winslash = "/", mustWork = FALSE))
+
+  comm_df <- tryCatch(
+    CellChat::subsetCommunication(cellchat),
+    error = function(e) {
+      warning("subsetCommunication failed for ", prefix, ": ", conditionMessage(e))
+      data.frame()
+    }
+  )
+  write_csv(comm_df, paste0(prefix, "_communication.csv"))
+
+  count_long <- matrix_to_long(cellchat@net$count, value_col = "n_interactions")
+  weight_long <- matrix_to_long(cellchat@net$weight, value_col = "interaction_weight")
+
+  write_csv(count_long, paste0(prefix, "_net_count.csv"))
+  write_csv(weight_long, paste0(prefix, "_net_weight.csv"))
+
+  invisible(list(
+    object = cellchat,
+    rds_file = rds_file,
+    communication_n = nrow(comm_df),
+    group_counts = group_counts
+  ))
+}
+
+# -----------------------------------------------------------------------------
+# Package checks
+# -----------------------------------------------------------------------------
+
+required_package("Seurat")
+required_package("CellChat")
+
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(CellChat)
 })
 
-tnk_cells$cell_subtype <- tnk_subtype_map[as.character(tnk_cells$seurat_clusters)]
-cat("T/NK subtypes:\n"); print(table(tnk_cells$cell_subtype))
+# -----------------------------------------------------------------------------
+# Load and validate input object
+# -----------------------------------------------------------------------------
 
-# ── Step 2: Subcluster myeloid cells ──
-mye_cells <- subset(seu, cell_type == "Myeloid")
-mye_cells <- FindNeighbors(mye_cells, reduction = "harmony", dims = 1:15)
-mye_cells <- FindClusters(mye_cells, resolution = 0.4)
+if (!file.exists(input_rds)) {
+  stop("Input object not found: ", input_rds, call. = FALSE)
+}
 
-# Kupffer cells:       C1QA, APOE, FOLR2
-# Tumor-assoc. macro:  CD163, CCL18
-# MDSC:                S100A9, LYZ, VCAN
-# Monocyte-derived:    HLA-DRA, LYZ
-mye_markers <- list(
-  Mye_KC   = c("C1QA",  "APOE",  "FOLR2"),
-  Mye_TAM  = c("CD163", "CCL18"),
-  Mye_MDSC = c("S100A9","LYZ",   "VCAN"),
-  Mye_Mono = c("HLA-DRA","LYZ")
+seu <- readRDS(input_rds)
+meta <- seu@meta.data
+
+required_cols <- c(patient_col, celltype_col, site_col, gly_col)
+missing_cols <- setdiff(required_cols, colnames(meta))
+if (length(missing_cols) > 0) {
+  stop(
+    "Missing required metadata columns: ",
+    paste(missing_cols, collapse = ", "),
+    call. = FALSE
+  )
+}
+
+meta[[patient_col]] <- safe_chr(meta[[patient_col]])
+meta[[celltype_col]] <- safe_chr(meta[[celltype_col]])
+meta[[site_col]] <- safe_chr(meta[[site_col]])
+
+if (!is.numeric(meta[[gly_col]])) {
+  meta[[gly_col]] <- suppressWarnings(as.numeric(meta[[gly_col]]))
+}
+
+if (anyNA(meta[[gly_col]])) {
+  warning("Some Glycolysis_AUC values are NA after numeric conversion.")
+}
+
+tumor_hepa <- meta[[site_col]] == "Tumor" &
+  meta[[celltype_col]] == "Hepatocyte" &
+  !is.na(meta[[gly_col]])
+
+tumor_hepa_n <- sum(tumor_hepa)
+median_cut <- stats::median(meta[[gly_col]][tumor_hepa], na.rm = TRUE)
+
+glyco_group <- rep(NA_character_, nrow(meta))
+glyco_group[tumor_hepa & meta[[gly_col]] > median_cut] <- "TumorGlycoHigh"
+glyco_group[tumor_hepa & meta[[gly_col]] <= median_cut] <- "TumorGlycoLow"
+
+cell_type_glyco <- meta[[celltype_col]]
+cell_type_glyco[tumor_hepa] <- glyco_group[tumor_hepa]
+
+meta$cell_type_current <- meta[[celltype_col]]
+meta$cell_type_glyco <- safe_chr(cell_type_glyco)
+meta$tumor_hepatocyte_status <- ifelse(tumor_hepa, "TumorHepatocyte", "OtherCell")
+meta$glyco_group_tumor_hepatocyte <- ifelse(tumor_hepa, glyco_group, NA_character_)
+
+glyco_high_n <- sum(meta$cell_type_glyco == "TumorGlycoHigh")
+glyco_low_n <- sum(meta$cell_type_glyco == "TumorGlycoLow")
+
+qc_df <- data.frame(
+  check_id = c(
+    "input_rds",
+    "patient_column_present",
+    "celltype_column_present",
+    "site_column_present",
+    "glycolysis_column_present",
+    "tumor_hepatocyte_definition",
+    "tumor_hepatocyte_n",
+    "median_cutoff",
+    "glycohigh_definition",
+    "glycolow_definition",
+    "glycohigh_n",
+    "glycolow_n",
+    "legacy_plural_hepatocytes_not_used",
+    "no_external_tumor_hepatocytes_rds_dependency"
+  ),
+  expected = c(
+    "seurat_final.rds",
+    patient_col,
+    celltype_col,
+    site_col,
+    gly_col,
+    'site == "Tumor" & cell_type == "Hepatocyte"',
+    as.character(expected_tumor_hepatocytes),
+    sprintf("%.7f", expected_median_cut),
+    "Glycolysis_AUC > median_cut",
+    "remaining tumor-derived hepatocytes",
+    as.character(expected_glyco_high),
+    as.character(expected_glyco_low),
+    'cell_type == "Hepatocyte"',
+    "No"
+  ),
+  observed = c(
+    input_rds,
+    ifelse(patient_col %in% colnames(meta), patient_col, "MISSING"),
+    ifelse(celltype_col %in% colnames(meta), celltype_col, "MISSING"),
+    ifelse(site_col %in% colnames(meta), site_col, "MISSING"),
+    ifelse(gly_col %in% colnames(meta), gly_col, "MISSING"),
+    'site == "Tumor" & cell_type == "Hepatocyte"',
+    as.character(tumor_hepa_n),
+    sprintf("%.7f", median_cut),
+    "Glycolysis_AUC > median_cut",
+    "remaining tumor-derived hepatocytes",
+    as.character(glyco_high_n),
+    as.character(glyco_low_n),
+    'cell_type == "Hepatocyte"',
+    "No"
+  ),
+  pass = c(
+    identical(input_rds, "seurat_final.rds"),
+    patient_col %in% colnames(meta),
+    celltype_col %in% colnames(meta),
+    site_col %in% colnames(meta),
+    gly_col %in% colnames(meta),
+    TRUE,
+    identical(as.integer(tumor_hepa_n), expected_tumor_hepatocytes),
+    isTRUE(abs(median_cut - expected_median_cut) < 1e-6),
+    TRUE,
+    TRUE,
+    identical(as.integer(glyco_high_n), expected_glyco_high),
+    identical(as.integer(glyco_low_n), expected_glyco_low),
+    !any(meta[[celltype_col]][tumor_hepa] == "Hepatocytes"),
+    TRUE
+  ),
+  stringsAsFactors = FALSE
 )
 
-mye_expr        <- GetAssayData(mye_cells, layer = "data")
-mye_cluster_ids <- levels(mye_cells$seurat_clusters)
+write_csv(qc_df, "CellChat_03_qc.csv")
 
-mye_subtype_map <- sapply(mye_cluster_ids, function(cl) {
-  cl_cells <- colnames(mye_cells)[mye_cells$seurat_clusters == cl]
-  scores   <- sapply(mye_markers, function(genes) {
-    g <- intersect(genes, rownames(mye_expr))
-    if (length(g) == 0) return(0)
-    mean(colMeans(mye_expr[g, cl_cells, drop = FALSE]))
-  })
-  names(which.max(scores))
-})
+if (!all(qc_df$pass)) {
+  stop(
+    "Mandatory CellChat input QC failed. See results/CellChat_03_qc.csv. ",
+    "Do not run CellChat on a non-locked object/annotation.",
+    call. = FALSE
+  )
+}
 
-mye_cells$cell_subtype <- mye_subtype_map[as.character(mye_cells$seurat_clusters)]
-cat("Myeloid subtypes:\n"); print(table(mye_cells$cell_subtype))
+# -----------------------------------------------------------------------------
+# Build CellChat input metadata and expression matrix
+# -----------------------------------------------------------------------------
 
-# ── Step 3: Build refined annotation for Round 3 ──
-seu$cell_subtype <- seu$cell_type_glyco   # start from Round 2 annotation
+expr <- get_expression_matrix(seu)
 
-# Overwrite T/NK and myeloid with subtype labels
-tnk_shared <- intersect(colnames(tnk_cells), colnames(seu))
-mye_shared <- intersect(colnames(mye_cells), colnames(seu))
-seu$cell_subtype[tnk_shared] <- tnk_cells$cell_subtype[tnk_shared]
-seu$cell_subtype[mye_shared] <- mye_cells$cell_subtype[mye_shared]
+common_cells <- intersect(colnames(expr), rownames(meta))
+if (length(common_cells) == 0) {
+  stop("No overlapping cell barcodes between expression matrix and metadata.")
+}
 
-cat("\nRound 3 cell type distribution:\n")
-print(table(seu$cell_subtype))
+expr <- expr[, common_cells, drop = FALSE]
+meta <- meta[common_cells, , drop = FALSE]
 
-# ── Step 4: Run CellChat Round 3 ──
-meta_r3 <- data.frame(cell_subtype = seu$cell_subtype,
-                      row.names    = colnames(seu))
+input_meta <- data.frame(
+  cell = rownames(meta),
+  patient = meta[[patient_col]],
+  site = meta[[site_col]],
+  cell_type = meta[[celltype_col]],
+  Glycolysis_AUC = meta[[gly_col]],
+  tumor_hepatocyte_status = meta$tumor_hepatocyte_status,
+  glyco_group_tumor_hepatocyte = meta$glyco_group_tumor_hepatocyte,
+  cell_type_current = meta$cell_type_current,
+  cell_type_glyco = meta$cell_type_glyco,
+  stringsAsFactors = FALSE
+)
 
-cellchat3 <- createCellChat(object   = GetAssayData(seu, layer = "data"),
-                            meta     = meta_r3,
-                            group.by = "cell_subtype")
-cellchat3@DB <- CellChatDB.human
+write_csv(input_meta, "CellChat_03_input_cell_metadata.csv")
 
-cellchat3 <- subsetData(cellchat3)
-cellchat3 <- identifyOverExpressedGenes(cellchat3)
-cellchat3 <- identifyOverExpressedInteractions(cellchat3)
-cellchat3 <- computeCommunProb(cellchat3, type  = "triMean",
-                                           nboot = 1000)
-cellchat3 <- filterCommunication(cellchat3, min.cells = 10)
-cellchat3 <- computeCommunProbPathway(cellchat3)
-cellchat3 <- aggregateNet(cellchat3)
+write_csv(make_group_counts(meta, "cell_type_current"), "CellChat_03_round1_group_counts.csv")
+write_csv(make_group_counts(meta, "cell_type_glyco"), "CellChat_03_round2_group_counts.csv")
 
-saveRDS(cellchat3, "hcc_cellchat_round3_subtypes.rds")
-cat("Round 3 complete. Saved: hcc_cellchat_round3_subtypes.rds\n")
+# -----------------------------------------------------------------------------
+# Run CellChat: Round 1 and Round 2
+# -----------------------------------------------------------------------------
 
-cat("\n=== All CellChat analyses complete ===\n")
-cat("Outputs:\n")
-cat("  hcc_cellchat_round1.rds        - Overall 6-cell-type communication\n")
-cat("  hcc_cellchat_round2_glyco.rds  - GlycoHigh/GlycoLow stratified\n")
-cat("  hcc_cellchat_round3_subtypes.rds - Subtype-resolved\n")
+round1 <- run_cellchat_round(
+  expr = expr,
+  meta = meta,
+  group_col = "cell_type_current",
+  prefix = "CellChat_03_round1",
+  min_cells = cellchat_min_cells,
+  nboot = cellchat_nboot,
+  use_secreted_only = use_secreted_signaling_only
+)
+
+round2 <- run_cellchat_round(
+  expr = expr,
+  meta = meta,
+  group_col = "cell_type_glyco",
+  prefix = "CellChat_03_round2_glyco",
+  min_cells = cellchat_min_cells,
+  nboot = cellchat_nboot,
+  use_secreted_only = use_secreted_signaling_only
+)
+
+# -----------------------------------------------------------------------------
+# Optional Round 3: subtype-resolved only if an explicit subtype column exists
+# -----------------------------------------------------------------------------
+
+subtype_candidates <- c(
+  "cell_subtype",
+  "subtype",
+  "Cell_subtype",
+  "immune_subtype",
+  "major_subtype",
+  "annotation_subtype"
+)
+
+subtype_col <- subtype_candidates[subtype_candidates %in% colnames(meta)][1]
+
+round3_status <- data.frame(
+  item = c(
+    "round3_requested",
+    "subtype_column_detected",
+    "subtype_column_used",
+    "de_novo_subclustering",
+    "status"
+  ),
+  value = c(
+    "optional",
+    ifelse(is.na(subtype_col), "No", "Yes"),
+    ifelse(is.na(subtype_col), "None", subtype_col),
+    "No",
+    ifelse(
+      is.na(subtype_col),
+      "Skipped: no explicit QC-locked subtype column found in seurat_final.rds.",
+      "Will run using the detected explicit subtype column."
+    )
+  ),
+  stringsAsFactors = FALSE
+)
+
+write_csv(round3_status, "CellChat_03_round3_status.csv")
+
+round3 <- NULL
+if (!is.na(subtype_col)) {
+  meta$cell_subtype_glyco <- meta$cell_type_glyco
+
+  subtype_values <- safe_chr(meta[[subtype_col]])
+  use_subtype <- meta[[celltype_col]] %in% c(
+    "T_NK", "T/NK", "CD8T", "CD8_T", "T", "NK",
+    "Myeloid", "Macrophage", "Monocyte", "DC"
+  )
+
+  meta$cell_subtype_glyco[use_subtype] <- subtype_values[use_subtype]
+  meta$cell_subtype_glyco <- safe_chr(meta$cell_subtype_glyco)
+
+  write_csv(make_group_counts(meta, "cell_subtype_glyco"),
+            "CellChat_03_round3_group_counts.csv")
+
+  round3 <- run_cellchat_round(
+    expr = expr,
+    meta = meta,
+    group_col = "cell_subtype_glyco",
+    prefix = "CellChat_03_round3_subtype_glyco",
+    min_cells = cellchat_min_cells,
+    nboot = cellchat_nboot,
+    use_secreted_only = use_secreted_signaling_only
+  )
+}
+
+# -----------------------------------------------------------------------------
+# Manifest and session info
+# -----------------------------------------------------------------------------
+
+manifest <- data.frame(
+  output_file = c(
+    "CellChat_03_qc.csv",
+    "CellChat_03_input_cell_metadata.csv",
+    "CellChat_03_round1_group_counts.csv",
+    "CellChat_03_round2_group_counts.csv",
+    "CellChat_03_round1.rds",
+    "CellChat_03_round2_glyco.rds",
+    "CellChat_03_round1_communication.csv",
+    "CellChat_03_round2_glyco_communication.csv",
+    "CellChat_03_round1_net_count.csv",
+    "CellChat_03_round1_net_weight.csv",
+    "CellChat_03_round2_glyco_net_count.csv",
+    "CellChat_03_round2_glyco_net_weight.csv",
+    "CellChat_03_round3_status.csv",
+    "CellChat_03_sessionInfo.txt"
+  ),
+  purpose = c(
+    "Mandatory locked-object QC",
+    "Cell-level metadata source table used for CellChat",
+    "Round 1 group counts",
+    "Round 2 GlycoHigh/GlycoLow group counts",
+    "Round 1 CellChat object",
+    "Round 2 CellChat object",
+    "Round 1 inferred ligand-receptor communication table",
+    "Round 2 inferred ligand-receptor communication table",
+    "Round 1 source-target interaction-count matrix in long format",
+    "Round 1 source-target interaction-weight matrix in long format",
+    "Round 2 source-target interaction-count matrix in long format",
+    "Round 2 source-target interaction-weight matrix in long format",
+    "Round 3 subtype-resolution status",
+    "R session information"
+  ),
+  figure_file = "No direct manuscript figure is generated by this script.",
+  stringsAsFactors = FALSE
+)
+
+if (!is.null(round3)) {
+  manifest <- rbind(
+    manifest,
+    data.frame(
+      output_file = c(
+        "CellChat_03_round3_group_counts.csv",
+        "CellChat_03_round3_subtype_glyco.rds",
+        "CellChat_03_round3_subtype_glyco_communication.csv",
+        "CellChat_03_round3_subtype_glyco_net_count.csv",
+        "CellChat_03_round3_subtype_glyco_net_weight.csv"
+      ),
+      purpose = c(
+        "Round 3 subtype-resolved group counts",
+        "Round 3 subtype-resolved CellChat object",
+        "Round 3 inferred ligand-receptor communication table",
+        "Round 3 source-target interaction-count matrix in long format",
+        "Round 3 source-target interaction-weight matrix in long format"
+      ),
+      figure_file = "No direct manuscript figure is generated by this script.",
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+write_csv(manifest, "CellChat_03_manifest.csv")
+
+session_lines <- capture.output(sessionInfo())
+write_text(session_lines, "CellChat_03_sessionInfo.txt")
+
+message("")
+message("03 CellChat analysis complete.")
+message("Mandatory locked-object QC passed.")
+message("Round 1 communication rows: ", round1$communication_n)
+message("Round 2 communication rows: ", round2$communication_n)
+if (is.null(round3)) {
+  message("Round 3 skipped because no explicit QC-locked subtype column was detected.")
+} else {
+  message("Round 3 communication rows: ", round3$communication_n)
+}
+message("No manuscript figure PDF/PNG was generated by this script.")
