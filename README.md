@@ -1,172 +1,194 @@
 # HCC-glycolysis-immune-scRNAseq
 
-Analysis code for the manuscript:
+Analysis code for the ENO1/glycolysis-immune evasion study in hepatocellular carcinoma (HCC).
 
-**Integrated single-cell, spatial, and clinical transcriptomics delineate a glycolysis-high metabolic-immune refractory subtype in hepatocellular carcinoma**
+This repository contains the analysis scripts used for single-cell, spatial, bulk-transcriptomic, and validation analyses. Several revision-stage scripts have been converted to source/QC-first or locked-status scripts to prevent obsolete local-path code from regenerating outdated figures.
 
-This repository contains scripts for the single-cell, spatial, and clinical transcriptomic analyses used to define a glycolysis-high metabolic-immune refractory subtype in hepatocellular carcinoma.
+## Locked analysis conventions
 
-## Current finalized data convention
+The current single-cell analysis convention is:
 
-The finalized single-cell analysis uses the current integrated Seurat object:
-
-- Main input object: `seurat_final.rds`
+- Primary object: `seurat_final.rds`
 - Patient column: `patient`
 - Cell-type column: `cell_type`
-- Tissue/site column: `site`
-- Glycolysis AUCell column: `Glycolysis_AUC`
+- Site column: `site`
+- Glycolysis activity column: `Glycolysis_AUC`
+- Tumor-derived hepatocytes: `site == "Tumor" & cell_type == "Hepatocyte"`
+- Number of tumor-derived hepatocytes: `n = 15,391`
+- Glycolysis median cutoff: `0.2203849`
+- GlycoHigh definition: `Glycolysis_AUC > median_cut`
+- GlycoLow definition: remaining tumor-derived hepatocytes
+- GlycoLow cells: `7,696`
+- GlycoHigh cells: `7,695`
 
-Tumor-derived hepatocytes are defined as:
+The locked TCGA-derived four-gene risk score is:
 
-    site == "Tumor" & cell_type == "Hepatocyte"
+```text
+score = 0.3041908 * TPI1 +
+        0.9639654 * ENO1 +
+        1.3404374 * LDHA +
+        0.2424239 * SLC2A1
+```
 
-Locked tumor-derived hepatocyte count:
-
-    n = 15,391
-
-GlycoHigh and GlycoLow are defined by a median split of `Glycolysis_AUC` within tumor-derived hepatocytes only:
-
-    median_cut <- median(Glycolysis_AUC)
-    High <- Glycolysis_AUC > median_cut
-    Low  <- Glycolysis_AUC <= median_cut
-
-Locked values:
-
-    Median Glycolysis_AUC cutoff = 0.2203849
-    GlycoLow  = 7,696
-    GlycoHigh = 7,695
-
-Deprecated conventions that should not be used in final manuscript-aligned scripts:
-
-- `glycolysis_score` instead of `Glycolysis_AUC`
-- `tissue` instead of `site`
-- `Hepatocytes` instead of `Hepatocyte`
-- Stratifying all cells instead of tumor-derived hepatocytes
-- Using `>= median` for High; final High is strictly `> median`
+The four-gene score was derived from TCGA-LIHC primary tumor survival-matched samples with `n = 365`. The `lambda.min` model retained four genes, whereas the `lambda.1se` model was null.
 
 ## Scripts
 
-| Script | Description |
+| Script | Current role / status |
 |---|---|
-| `01_QC_clustering.R` | Quality control, Harmony batch correction, and cell-type annotation. |
-| `02_glycolysis_scoring.R` | Finalized tumor-derived hepatocyte GlycoHigh/GlycoLow assignment using `seurat_final.rds`, `Glycolysis_AUC`, `site == "Tumor"`, `cell_type == "Hepatocyte"`, and locked QC checks for n = 15,391, GlycoLow = 7,696, GlycoHigh = 7,695. |
-| `03_cellchat_analysis.R` | CellChat communication analysis comparing GlycoHigh and GlycoLow tumor-derived hepatocytes with immune target populations. |
-| `04_TCGA_validation.R` | TCGA-LIHC ENO1 survival, immune infiltration, and TIDE-signature-derived immune-context analyses. |
-| `05_GSE125449_validation.R` | Cross-dataset evaluation in GSE125449 for ENO1-glycolysis association and ligand expression. |
-| `06_inferCNV_malignant.R` | inferCNV-based malignant hepatocyte support analysis; hepatocyte labels should be aligned with the finalized `Hepatocyte` convention. |
-| `07_LASSO_risk_score.R` | TCGA-LIHC four-gene glycolysis score construction using TPI1, ENO1, LDHA, and SLC2A1 with locked coefficients; lambda.min retains four genes and lambda.1se is null. |
-| `08_glycolysis_gradient.R` | Supplementary Figure S15 glycolysis-gradient analysis using 10 equal-width AUCell-score bins and mean log-normalized expression of ENO1, LDHA, SPP1, MIF, and PTGES in tumor-derived hepatocytes. |
-| `09_TF_activity.R` | DoRothEA/VIPER transcription factor activity inference in tumor-derived hepatocytes using `Glycolysis_AUC`. |
-| `10_GSE14520_validation.R` | External validation of the finalized four-gene glycolysis score in GSE14520; survival cohort n = 221 and multivariable Cox n = 217. |
-| `11_spatial_transcriptomics.R` | Visium spatial transcriptomics analysis of glycolysis and immunosuppressive ligand features. |
-| `12_drug_repurposing.R` | Legacy exploratory drug-repurposing script; not part of the finalized main manuscript line unless replaced by the GSE235863 immunotherapy non-response analysis. |
-| `13_revision_analyses.R` | Revision-stage supplementary analyses and figure restoration support. |
-| `14_OXPHOS_metabolic_specificity.R` | OXPHOS AUCell scoring and metabolic specificity analysis; final output corresponds to Supplementary Figure S21. |
-| `15_NicheNet_analysis.R` | NicheNet ligand activity analysis using GlycoHigh tumor-derived hepatocytes as sender cells and tumor-derived T/NK plus myeloid cells as receiver cells. |
-| `16_patient_level_ligand_effects.R` | Patient-level ligand mean-expression robustness analysis for SPP1, MIF, and PTGES; final MIF paired Wilcoxon FDR = 0.0428. |
-| `17_partial_correlation_metabolic_specificity.R` | Supplementary Figure S21 partial Spearman correlation plot for glycolysis versus OXPHOS specificity in tumor-derived hepatocytes. |
+| `01_QC_clustering.R` | Primary scRNA-seq quality control, integration, clustering, and annotation workflow. |
+| `02_glycolysis_scoring.R` | Current locked AUCell glycolysis scoring and GlycoHigh/GlycoLow stratification using `seurat_final.rds`, `patient`, `cell_type`, `site`, and `Glycolysis_AUC`. |
+| `03_cellchat_analysis.R` | CellChat cell-cell communication analysis. Pending later path/label review; do not use this script to override locked downstream figure values without re-QC. |
+| `04_TCGA_validation.R` | TCGA-LIHC ENO1 survival, immune infiltration, and TIDE-related validation analyses. |
+| `05_GSE125449_validation.R` | Cross-dataset validation in GSE125449. Pending later path/label review. |
+| `06_inferCNV_malignant.R` | inferCNV malignant hepatocyte identification. Pending later path/label review. |
+| `07_LASSO_risk_score.R` | Locked TCGA-derived four-gene Cox/LASSO risk-score model using `TPI1`, `ENO1`, `LDHA`, and `SLC2A1`. |
+| `08_glycolysis_gradient.R` | Supplementary Figure S15 glycolysis-gradient analysis using 10 equal-width AUCell-score bins and mean log-normalized expression of `ENO1`, `LDHA`, `SPP1`, `MIF`, and `PTGES` in tumor-derived hepatocytes. |
+| `09_TF_activity.R` | Supplementary Figure S16 DoRothEA/VIPER transcription-factor activity analysis in 15,391 tumor-derived hepatocytes, correlated with `Glycolysis_AUC`. |
+| `10_GSE14520_validation.R` | Independent GSE14520 validation of the locked four-gene score. Tumor samples with complete survival information: `n = 221`; multivariable Cox evaluable samples: `n = 217`; HR per SD approximately `1.32`. |
+| `11_spatial_transcriptomics.R` | GSE238264 Visium spatial analysis for HCC1R, HCC2R, HCC3R, and HCC4R using SCTransform and within-sample median Glycolysis1 module-score grouping. |
+| `12_drug_repurposing.R` | Replaced legacy drug-repurposing enrichment with GSE235863 anti-PD-1 plus lenvatinib exploratory non-response association analysis using the locked four-gene score. This is exploratory and not a formal response-prediction model. |
+| `13_revision_analyses.R` | Legacy/status note script. It no longer regenerates mixed obsolete revision figures and redirects analyses to dedicated current scripts. |
+| `14_OXPHOS_metabolic_specificity.R` | OXPHOS AUCell score and S21 input source/QC generation for tumor-derived hepatocytes. This script does not generate S22 and does not generate the final S21 figure. |
+| `15_NicheNet_analysis.R` | Supplementary Figure S22 locked-status / reproduction-guard script. It intentionally does not rerun NicheNet and does not overwrite the manuscript-matched S22 figure. |
+| `16_patient_level_ligand_effects.R` | Supplementary Figure S23 patient-level GlycoHigh-minus-GlycoLow mean-expression robustness analysis for `SPP1`, `MIF`, and `PTGES`. |
+| `17_partial_correlation_metabolic_specificity.R` | Supplementary Figure S21 partial Spearman metabolic-specificity analysis for glycolysis versus OXPHOS, using `SPP1` and `MIF`. |
+| `restore_FigS12_ENO1_glycolysis_per_patient.R` | Final restoration script for Supplementary Figure S12 per-patient ENO1-glycolysis correlation. |
+| `revision_figure_restore/` | Final submission-ready clean vector figure restoration scripts after figure-level QC, renumbering, and vector-output restoration. |
 
-## Corrected final figure mapping
+## Source/QC-first figure policy
 
-- Supplementary Figure S12: per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes, reproduced using the current-object `seurat_final.rds` convention.
-- Supplementary Figure S15: glycolysis-gradient expression of ENO1, LDHA, SPP1, MIF, and PTGES in tumor-derived hepatocytes, reproduced by `08_glycolysis_gradient.R`.
-- Supplementary Figure S20: RCTD-estimated spatial cell-type composition.
-- Supplementary Figure S21: metabolic specificity / partial Spearman correlation.
-- Supplementary Figure S22: NicheNet ligand activity.
-- Supplementary Figure S23: patient-level ligand mean-expression robustness.
-- Supplementary Figure S24: TCGA-LIHC and GSE14520 3-year OS calibration.
-- Supplementary Figure S25: GCK inclusion/exclusion sensitivity analysis.
+For revised scripts, the intended workflow is:
 
-## Locked finalized supplementary figure results
+1. Write source-data tables.
+2. Write QC tables.
+3. Generate PDF/PNG figure outputs only after mandatory QC checks pass.
+4. Avoid in-figure titles such as “Supplementary Figure Sxx” in final figure panels unless explicitly required.
+5. Do not regenerate locked manuscript figures from obsolete local paths or changed object definitions.
+
+## Locked and corrected figure mapping
+
+| Figure | Current source / status |
+|---|---|
+| Supplementary Figure S12 | Per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes; restored by `restore_FigS12_ENO1_glycolysis_per_patient.R`. |
+| Supplementary Figure S15 | Glycolysis-gradient expression of `ENO1`, `LDHA`, `SPP1`, `MIF`, and `PTGES` in tumor-derived hepatocytes; reproduced by `08_glycolysis_gradient.R`. |
+| Supplementary Figure S16 | DoRothEA/VIPER transcription-factor activity correlated with `Glycolysis_AUC`; reproduced by `09_TF_activity.R`. |
+| Supplementary Figure S18 | Spatial transcriptomics output from `11_spatial_transcriptomics.R`. |
+| Supplementary Figure S20 | RCTD-estimated spatial cell-type composition from `11_spatial_transcriptomics.R`. |
+| Supplementary Figure S21 | Glycolysis-versus-OXPHOS partial Spearman metabolic-specificity analysis; source/QC from `14_OXPHOS_metabolic_specificity.R`, final plot from `17_partial_correlation_metabolic_specificity.R`. |
+| Supplementary Figure S22 | NicheNet ligand activity analysis; locked manuscript-matched status protected by `15_NicheNet_analysis.R`. |
+| Supplementary Figure S23 | Patient-level ligand mean-expression robustness for `SPP1`, `MIF`, and `PTGES`; reproduced by `16_patient_level_ligand_effects.R`. |
+| Supplementary Figure S24 | TCGA-LIHC and GSE14520 3-year OS calibration. |
+| Supplementary Figure S25 | GCK sensitivity analysis. |
+
+Tentative or scope-pending figures are not included in final restoration scripts until their data scope is finalized.
+
+## Locked supplementary results
 
 ### Supplementary Figure S12
 
-- Input object: `seurat_final.rds`
-- Tumor-derived hepatocytes: 15,391
-- Patients: 8 HCC patients
-- Global Pearson R = 0.57
-- Per-patient Spearman rho range = 0.363 in HCC04 to 0.633 in HCC10
-- Median rho = 0.498
-- Raw p-value range = 4.43e-248 to 5.06e-17
-- All BH-adjusted p-values < 0.05
-- Final files: `FigS12_final_two_color_no_stars.pdf`, `FigS12_final_two_color_no_stars.png`
+S12 is locked to the current-object result:
+
+- Tumor-derived hepatocytes: `15,391`
+- HCC patients: `8`
+- Global Pearson correlation: `R = 0.57`
+- Per-patient Spearman rho range: `0.363` in HCC04 to `0.633` in HCC10
+- Median per-patient rho: `0.498`
+- Raw p-value range: `4.43e-248` to `5.06e-17`
+- All BH-adjusted p-values `< 0.05`
 
 ### Supplementary Figure S15
 
-- Input object: `seurat_final.rds`
-- Tumor-derived hepatocytes: 15,391
-- Glycolysis column: `Glycolysis_AUC`
-- Binning method: 10 equal-width bins spanning the AUCell glycolysis score range
-- Binning code: `cut(Glycolysis_AUC, breaks = 10, include.lowest = TRUE)`
-- Expression summary: mean log-normalized RNA expression
-- Genes: ENO1, LDHA, SPP1, MIF, PTGES
-- Final output files:
-  - `FigS15_source_data.csv`
-  - `FigS15_QC_check.csv`
-  - `FigS15_final_no_title.pdf`
-  - `FigS15_final_no_title.png`
+S15 is locked as a glycolysis-gradient analysis:
+
+- Tumor-derived hepatocytes only
+- 10 equal-width `Glycolysis_AUC` bins
+- Mean log-normalized expression of `ENO1`, `LDHA`, `SPP1`, `MIF`, and `PTGES`
+- Reproduced by `08_glycolysis_gradient.R`
+
+### Supplementary Figure S21
+
+S21 is the metabolic-specificity / partial Spearman analysis:
+
+- `SPP1` glycolysis partial rho approximately `0.227`
+- `SPP1` OXPHOS partial rho approximately `0.125`
+- `MIF` glycolysis partial rho approximately `0.105`
+- `MIF` OXPHOS partial rho approximately `0.242`
+- Glycolysis-OXPHOS rho approximately `0.066`
+
+### Supplementary Figure S22
+
+S22 is locked to the manuscript-matched NicheNet ligand-activity result:
+
+- Sender cells: GlycoHigh hepatocytes, `n = 5,589`
+- Receiver cells: tumor-derived T/NK plus myeloid cells, `n = 11,383`
+- Expressed ligands: `325`
+- Ligand activity panel: top 30 ligands
+- `MIF` rank: `37`
+- `MIF` AUPR: `0.091`
+- `SPP1` rank: `250`
+- `SPP1` AUPR: `0.026`
+
+`15_NicheNet_analysis.R` intentionally does not rerun NicheNet because regenerating S22 from the current `seurat_final.rds` median split would use GlycoHigh `n = 7,695`, which may not reproduce the manuscript-matched S22 result. If a full S22 computational rerun is required, the original S22-specific NicheNet input/output objects that produced sender `n = 5,589` should be restored first.
 
 ### Supplementary Figure S23
 
-- MIF mean effect High-Low = 0.460
-- MIF median effect High-Low = 0.355
-- MIF paired Wilcoxon p = 0.0143
-- MIF paired Wilcoxon FDR = 0.0428
-- SPP1 paired Wilcoxon FDR = 0.441
-- PTGES paired Wilcoxon FDR = 0.0888
-- Final files: `FigS23_final_no_title.pdf`, `FigS23_final_no_title.png`
+S23 is locked to the patient-level ligand mean-expression robustness result:
 
-## Four-gene glycolysis score
+- `MIF` mean effect High-Low: `0.460`
+- `MIF` median effect High-Low: `0.355`
+- `MIF` paired Wilcoxon p-value: `0.0143`
+- `MIF` paired Wilcoxon FDR: `0.0428`
+- `SPP1` paired Wilcoxon FDR: `0.441`
+- `PTGES` paired Wilcoxon FDR: `0.0888`
+- Locked final files: `FigS23_final_no_title.pdf` and `FigS23_final_no_title.png`
 
-The finalized tissue-level glycolysis score uses four genes:
+## Spatial transcriptomics notes
 
-    TPI1, ENO1, LDHA, SLC2A1
+`11_spatial_transcriptomics.R` uses GSE238264 Visium samples:
 
-Score formula:
+- HCC1R
+- HCC2R
+- HCC3R
+- HCC4R
 
-    Four-gene glycolysis score =
-    0.3041908 * TPI1 +
-    0.9639654 * ENO1 +
-    1.3404374 * LDHA +
-    0.2424239 * SLC2A1
+Expected within-sample median group counts are:
 
-The old nine-gene score is deprecated and should not be used in final manuscript-aligned scripts.
+| Sample | GlycoHigh | GlycoLow |
+|---|---:|---:|
+| HCC1R | 1,503 | 1,503 |
+| HCC2R | 1,383 | 1,383 |
+| HCC3R | 1,085 | 1,085 |
+| HCC4R | 1,501 | 1,501 |
 
-TCGA-LIHC finalized LASSO convention:
+Spatial conclusions should be described as spot-level tissue co-enrichment. They should not be overstated as same-cell co-expression, tumor-cell-specific ligand production, or direct ligand-receptor contact.
 
-- Primary tumor survival-matched cohort: n = 365
-- Candidate features: 22 curated glycolysis genes
-- `lambda.min`: retained TPI1, ENO1, LDHA, and SLC2A1
-- `lambda.1se`: null model
+## GSE235863 exploratory response analysis
 
-GSE14520 finalized validation convention:
+`12_drug_repurposing.R` currently represents an exploratory anti-PD-1 plus lenvatinib non-response association analysis, not a drug-repurposing prioritization analysis.
 
-- Tumor samples with survival data: n = 221
-- Multivariable Cox complete-case cohort: n = 217
-- Adjusted covariates:
-  - AFP
-  - cirrhosis
-  - main tumor size
-  - multinodular disease
+Locked exploratory values:
 
-## Data
+- Total samples: `n = 15`
+- Responders: `11`
+- Non-responders: `4`
+- Positive class: non-responder
+- Four-gene score AUC approximately `0.932`
+- 95% CI approximately `0.773–1.000`
+- Median-in-high grouping places all 4 non-responders in the High group
+- Fisher p-value approximately `0.077`
 
-- scRNA-seq: GSE149614 primary dataset, GSE125449 cross-dataset evaluation
-- Bulk RNA-seq: TCGA-LIHC from UCSC Xena
-- Microarray: GSE14520
+## Data resources
+
+- scRNA-seq: GSE149614 primary cohort, GSE125449 validation cohort
+- Bulk RNA-seq: TCGA-LIHC
+- Microarray validation: GSE14520
 - Spatial transcriptomics: GSE238264
-- Exploratory immunotherapy cohort: GSE235863
+- Exploratory treatment-response association: GSE235863
 
-## Repository status note
+## Notes for future maintenance
 
-This repository is being synchronized to the finalized manuscript. Scripts that still contain legacy assumptions should be updated before being treated as manuscript-reproducible.
-
-Priority corrections include:
-
-1. `02_glycolysis_scoring.R`: finalized `Glycolysis_AUC` and tumor-derived hepatocyte split.
-2. `07_LASSO_risk_score.R`: finalized four-gene TCGA score.
-3. `10_GSE14520_validation.R`: finalized four-gene GSE14520 validation.
-4. `12_drug_repurposing.R`: legacy status or replacement by GSE235863 non-response analysis.
-5. `14_OXPHOS_metabolic_specificity.R`: final Supplementary Figure S21 mapping.
-6. `15_NicheNet_analysis.R`: current-object and site/cell-type convention alignment.
-7. `17_partial_correlation_metabolic_specificity.R`: tumor-derived hepatocyte restriction, n = 15,391.
+- Update `README.md` only after script-level changes are committed.
+- Do not use README text as evidence that a script has already been committed; verify the actual file on `main`.
+- For locked figures, do not replace manuscript-matched results unless the exact source objects and QC targets are available.
+- Legacy or pending-review scripts should not be used to overwrite locked figure outputs without a new, documented QC pass.
