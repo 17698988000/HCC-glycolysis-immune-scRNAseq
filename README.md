@@ -14,7 +14,7 @@ Analysis code for ENO1/glycolysis-immune evasion study in HCC
 | `05_GSE125449_validation.R` | Cross-dataset validation in GSE125449 (Section 3.8) |
 | `06_inferCNV_malignant.R` | inferCNV malignant hepatocyte identification (Section 2.5) |
 | `07_LASSO_risk_score.R` | LASSO-penalized Cox regression glycolysis risk score (Section 2.10) |
-| `08_glycolysis_gradient.R` | Glycolysis activity gradient analysis (Section 2.11) |
+| `08_glycolysis_gradient.R` | Supplementary Figure S15 glycolysis-gradient analysis using 10 equal-width AUCell-score bins and mean log-normalized expression (Section 2.11; Results Section 3.12) |
 | `09_TF_activity.R` | DoRothEA/VIPER transcription factor activity inference (Section 2.12) |
 | `10_GSE14520_validation.R` | Independent validation of risk score in GSE14520 (Section 2.13) |
 | `11_spatial_transcriptomics.R` | Visium spatial transcriptomics and RCTD deconvolution (Section 2.14) |
@@ -37,6 +37,7 @@ Corrected final figure mapping:
 
 - Figure 8: benchmarking / model comparison.
 - - Supplementary Figure S12: per-patient ENO1-glycolysis correlation in tumor-derived hepatocytes.
+  - Supplementary Figure S15: glycolysis-gradient expression of ENO1, LDHA, SPP1, MIF, and PTGES in tumor-derived hepatocytes, reproduced by `08_glycolysis_gradient.R`.
 - Figure 9B: spatial GlycoHigh versus GlycoLow direction consistency.
 - Supplementary Figure S20: RCTD-estimated spatial cell-type composition.
 - Supplementary Figure S21: metabolic specificity / partial Spearman correlation.
