@@ -3,7 +3,7 @@
 # NicheNet Ligand Activity Analysis (Section 2.16)
 # Prioritizes ligands from GlycoHigh hepatocytes predicted to regulate
 # immunosuppression and T cell exhaustion markers in T/NK and myeloid receivers
-# Generates: Supplementary Figure S23
+# Generates: Supplementary Figure S22
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -172,7 +172,7 @@ ligand_activities <- ligand_activities %>%
 # Save full results
 dir.create("results", showWarnings = FALSE)
 write.csv(ligand_activities,
-          "results/S23_NicheNet_ligand_activities.csv", row.names = FALSE)
+          "results/S22_NicheNet_ligand_activities.csv", row.names = FALSE)
 
 # Print manuscript focal ligands
 mif_row  <- ligand_activities %>% filter(test_ligand == "MIF")
@@ -221,9 +221,9 @@ ligand_receptor_links_df <- get_weighted_ligand_receptor_links(
 )
 
 # -----------------------------------------------------------------------------
-# 8. Generate Supplementary Figure S23
+# 8. Generate Supplementary Figure S22
 # -----------------------------------------------------------------------------
-message("Generating Supplementary Figure S23...")
+message("Generating Supplementary Figure S22...")
 
 # ── Panel A: Top ligands ranked by corrected AUPR ──
 n_show   <- 30
@@ -340,10 +340,10 @@ if (length(top_ligands_filtered) > 0 && nrow(active_ligand_target_links) > 0) {
 }
 
 # ── Assemble figure ──
-fig_s23 <- (p_activity | p_context) / p_heatmap +
+fig_s22 <- (p_activity | p_context) / p_heatmap +
   plot_annotation(
     title = paste0(
-      "Supplementary Figure S23. NicheNet cross-method validation of immunosuppressive ",
+      "Supplementary Figure S22. NicheNet cross-method validation of immunosuppressive ",
       "ligand activity from GlycoHigh hepatocytes"
     ),
     caption = paste0(
@@ -362,19 +362,19 @@ fig_s23 <- (p_activity | p_context) / p_heatmap +
   )
 
 dir.create("figures", showWarnings = FALSE)
-ggsave("figures/Supplementary_Figure_S23.pdf", fig_s23,
+ggsave("figures/Supplementary_Figure_S22.pdf", fig_s22,
        width = 16, height = 14, dpi = 300, useDingbats = FALSE)
-ggsave("figures/Supplementary_Figure_S23.png", fig_s23,
+ggsave("figures/Supplementary_Figure_S22.png", fig_s22,
        width = 16, height = 14, dpi = 300)
-message("Supplementary Figure S23 saved to figures/")
+message("Supplementary Figure S22 saved to figures/")
 
 # -----------------------------------------------------------------------------
 # 9. Save ligand-target and ligand-receptor link tables
 # -----------------------------------------------------------------------------
 write.csv(active_ligand_target_links_df,
-          "results/S23_NicheNet_ligand_target_links.csv", row.names = FALSE)
+          "results/S22_NicheNet_ligand_target_links.csv", row.names = FALSE)
 write.csv(ligand_receptor_links_df,
-          "results/S23_NicheNet_ligand_receptor_links.csv", row.names = FALSE)
+          "results/S22_NicheNet_ligand_receptor_links.csv", row.names = FALSE)
 
 writeLines(capture.output(sessionInfo()),
            "results/15_NicheNet_session_info.txt")
