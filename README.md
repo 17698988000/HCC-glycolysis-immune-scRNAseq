@@ -20,8 +20,9 @@ Analysis code for ENO1/glycolysis-immune evasion study in HCC
 | 11_spatial_transcriptomics.R | Visium spatial transcriptomics + RCTD deconvolution (Section 2.14) |
 | 12_drug_repurposing.R | Drug repurposing enrichment analysis (Section 2.17) |
 | 13_revision_analyses.R | Revision-stage supplementary analyses (Figures S9–S13, S20) |
-| 14_OXPHOS_metabolic_specificity.R | OXPHOS AUCell scoring and metabolic specificity analysis (Section 2.15) |
-| 15_NicheNet_analysis.R | NicheNet ligand activity analysis (Section 2.16, Figure S23) |
+| 14_OXPHOS_metabolic_specificity.R | OXPHOS AUCell scoring and mmetabolic specificity analysis (Section 2.15)
+15_NicheNet_analysis.R | NicheNet ligand activity analysis (Section 2.16, Supplementary Figure S22)
+16_FigS23_patient_level_ligand_effects.R | Patient-level ligand mean-expression robustness analysis for SPP1, MIF, and PTGES (Supplementary Figure S23)
 
 17_FigS21_partial_correlation_metabolic_specificity.R | Supplementary Fig. S21 partial Spearman correlation plot for glycolysis versus OXPHOS specificity
 
