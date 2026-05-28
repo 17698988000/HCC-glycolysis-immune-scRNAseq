@@ -14,8 +14,9 @@ This order follows the Step-8-final manuscript and the Step-9 supplementary-repo
 4. `16_patient_level_ligand_effects.R`  
    Generate patient-level ligand robustness summaries for SPP1, MIF, and PTGES.
 
-5. `03_cellchat_analysis.R` and `15_NicheNet_analysis.R`  
-   Generate or guard inference-based communication and ligand-activity outputs. Do not interpret as functional validation.
+5. `03_cellchat_analysis.R`, `15_NicheNet_analysis.R`, and `18_LIANA_directional_concordance.R`
+   Generate or guard inference-based communication, ligand-activity, and Step 11 LIANA directional-concordance outputs.
+   LIANA is restricted to predefined MIF/SPP1 axes and must not be interpreted as functional validation, mechanistic proof, spatial proximity evidence, treatment-response evidence, or clinical decision support.
 
 6. `14_OXPHOS_metabolic_specificity.R` and `17_partial_correlation_metabolic_specificity.R`  
    Generate metabolic-specificity source/QC outputs.
