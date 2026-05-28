@@ -64,7 +64,7 @@ Use `RUN_ORDER.md`. Some large public-data downloads, Seurat object construction
 | `16_patient_level_ligand_effects.R` | Patient-level ligand mean-expression robustness source/QC analysis. |
 | `17_partial_correlation_metabolic_specificity.R` | Partial Spearman metabolic-specificity analysis for glycolysis/OXPHOS context. |
 | `18_LIANA_directional_concordance.R` | Step 11 cross-method directional-concordance check for predefined MIF/SPP1 axes; supports candidate inference-based communication-layer interpretation only. |
-| `revision_figure_restore/` | Selected vector-output restoration scripts retained for current supplementary/model-diagnostic support. |
+| revision_figure_restore/ | Legacy figure-restoration scripts retained only for historical traceability; not authoritative for the current Figure 1–7 workflow. |
 | `archive_not_used/` | Scripts retained for transparency but not used in the current Step-8-final manuscript. |
 
 ## Archived / not used in the current manuscript
