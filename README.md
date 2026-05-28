@@ -63,6 +63,7 @@ Use `RUN_ORDER.md`. Some large public-data downloads, Seurat object construction
 | `15_NicheNet_analysis.R` | NicheNet locked-status / reproduction-guard script. Inference-based only. |
 | `16_patient_level_ligand_effects.R` | Patient-level ligand mean-expression robustness source/QC analysis. |
 | `17_partial_correlation_metabolic_specificity.R` | Partial Spearman metabolic-specificity analysis for glycolysis/OXPHOS context. |
+| `18_LIANA_directional_concordance.R` | Step 11 cross-method directional-concordance check for predefined MIF/SPP1 axes; supports candidate inference-based communication-layer interpretation only. |
 | `revision_figure_restore/` | Selected vector-output restoration scripts retained for current supplementary/model-diagnostic support. |
 | `archive_not_used/` | Scripts retained for transparency but not used in the current Step-8-final manuscript. |
 
