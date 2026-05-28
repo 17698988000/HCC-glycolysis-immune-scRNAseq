@@ -98,4 +98,4 @@ Public datasets used in the current manuscript:
 
 ## Code availability note
 
-The manuscript currently contains a placeholder `[GitHub URL]` in the Code availability section. Replace it with the final public repository URL before submission.
+The manuscript currently contains a placeholder `(https://github.com/17698988000/HCC-glycolysis-immune-scRNAseq)` in the Code availability section. Replace it with the final public repository URL before submission.
