@@ -1,30 +1,15 @@
+# Legacy figure restoration scripts
 
-# Final figure restoration scripts
+This folder is retained only for historical traceability of earlier figure-restoration attempts.
 
-This folder contains final submission-ready clean vector figure scripts generated after figure QC.
+These scripts are not the authoritative workflow for the current step8/step9 claim-controlled manuscript and should not be used to infer the current main Figure 1–7 structure.
 
-The original analysis scripts in the repository remain the primary workflow. The scripts in this folder regenerate selected final manuscript figures after figure-level quality control, renumbering, and vector-output restoration.
+The current manuscript uses a revised Figure 1–7 structure, including:
+- Figure 2D as inferCNV-derived CNV support / malignancy support;
+- Figure 6D as TCGA 1/3/5-year time-dependent ROC;
+- Supplementary Figure S26 for contextual benchmarking;
+- Figure 7 as an A–D exploratory immune-context and GSE235863 association figure.
 
-## Included scripts
+Some scripts in this folder retain legacy figure numbering or ENO1-centered filenames. These names reflect historical restoration work only. They do not define the current manuscript claims, figure numbering, or active analytical workflow.
 
-- `plot_Fig4E_SC_ENO1_SPP1_correlation.R`: single-cell ENO1-SPP1 correlation.
-- `plot_Fig5B_ENO1_KM_optimal.R`: ENO1 Kaplan-Meier survival curve.
-- `plot_Fig5C_ENO1_AJCC_stage.R`: ENO1 expression across AJCC pathologic stage.
-- `plot_Fig5D_ENO1_Cox_forest.R`: ENO1 multivariate Cox forest plot.
-- `plot_Fig6A_four_gene_score_KM.R`: four-gene score Kaplan-Meier survival curve.
-- `plot_Fig6B_four_gene_score_Cox_forest.R`: four-gene score multivariate Cox forest plot.
-- `plot_Fig9B_spatial_direction_consistency.R`: spatial GlycoHigh versus GlycoLow direction consistency. This is Figure 9B, not Figure 8.
-- `plot_FigS20_RCTD_celltype_composition.R`: RCTD-estimated spatial cell-type composition.
-- `plot_FigS24_calibration_TCGA_GSE14520.R`: TCGA-LIHC and GSE14520 3-year OS calibration.
-- `plot_FigS25_GCK_sensitivity.R`: GCK sensitivity analysis.
-
-## Notes
-
-- Figure 8 is reserved for benchmarking / model comparison and is not regenerated in this folder yet.
-- Figure 9 is the spatial transcriptomics figure.
-- Supplementary Figure S20 is RCTD cell-type composition.
-- Supplementary Figure S22 is NicheNet ligand activity.
-- Supplementary Figure S23 is patient-level ligand mean-expression robustness.
-- Supplementary Figure S24 is calibration.
-- Supplementary Figure S25 is GCK sensitivity.
-- Tentative figures, including the current FigS15 glycolysis gradient candidate, are not included here until their data scope is finalized.
+For the current repository organization, use the root README.md, RUN_ORDER.md, DATA_AND_CLAIM_BOUNDARIES.md, and MANUSCRIPT_TO_REPOSITORY_MAP.tsv as the authoritative documentation.
