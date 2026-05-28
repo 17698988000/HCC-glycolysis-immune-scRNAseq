@@ -1,0 +1,17 @@
+Manuscript/Supplementary item	Repository script/output	Status	Boundary note
+Figure 1 workflow / validation ladder	Manuscript figure files; no active script in this repository	Locked outside repository	Evidence-chain summary; no new claim
+Figure 2 GlycoHigh state and malignant support	02_glycolysis_scoring.R; 06_inferCNV_malignant.R	Active source/QC support	GlycoHigh state and CNV/malignancy support only
+Figure 2D inferCNV CNV support	06_inferCNV_malignant.R plus locked Figure2D true-vector output	Active/locked output	CNV/malignancy support, not mechanistic validation
+Figure 3 patient-aware ligand features	16_patient_level_ligand_effects.R	Active source/QC support	SPP1/MIF/PTGES are candidate ligand-level signals
+Figure 4 candidate communication layers	03_cellchat_analysis.R; 15_NicheNet_analysis.R	Active source/QC or locked-status support	Inference-based communication only, not functional validation
+Figure 5 spatial support	11_spatial_transcriptomics.R; revision_figure_restore/plot_FigS20_RCTD_celltype_composition.R	Active/retained support	Spot-level co-enrichment after composition adjustment
+Figure 6 four-gene readout and prognosis	07_LASSO_risk_score.R; 10_GSE14520_validation.R; revision_figure_restore/plot_FigS24_calibration_TCGA_GSE14520.R	Active/retained support	Discovery-stage tissue-level readout, not clinical-ready model
+Figure 6D TCGA timeROC	Model diagnostic outputs generated outside this zip; map to local step6 diagnostics	Locked manuscript output; documentation required	Transparency diagnostic, not clinical deployment evidence
+Supplementary Figure S26 benchmarking	Benchmarking outputs generated outside this zip; map to local step6 diagnostics	Locked manuscript output; documentation required	Contextual benchmarking only
+Figure 7 immune context and exploratory treatment association	12_GSE235863_exploratory_association.R	Active script	Descriptive/hypothesis-generating only; no ROC/PR/DCA/ML
+GCK removal sensitivity	revision_figure_restore/plot_FigS25_GCK_sensitivity.R	Retained support	Robustness check only
+Leave-one-out/circularity sensitivity	Not fully represented by a dedicated active script in this zip	Gap to document/fill	Should be mapped to supplementary output if retained
+Depth / UMI / technical sensitivity	02_glycolysis_scoring.R and local locked supplementary outputs	Partial support	Technical robustness only
+Residual Moran spatial sensitivity	11_spatial_transcriptomics.R or local spatial diagnostics	Partial support	Residual-dependence sensitivity only
+GSE125449	archive_not_used/05_GSE125449_validation_NOT_USED_in_step8_final_manuscript.R	Archived/not used	Removed from current manuscript dataset census
+Legacy GSE235863 ROC/AUC script	archive_not_used/12_drug_repurposing_NOT_USED_in_step8_final_manuscript.R	Archived/not used	Do not cite; ROC/PR removed from current manuscript
