@@ -1,6 +1,6 @@
 # Recommended run order for the current manuscript
 
-This order follows the Step-8-final manuscript and the Step-9 supplementary-repository requirement. It is not intended to create new claims or new manuscript figures without a documented QC pass.
+This document describes the recommended execution order for the analysis scripts supporting the revised manuscript. It is intended for reproducibility, source/QC generation, and interpretation-boundary tracking, not for creating new manuscript claims or replacing locked manuscript figures without a documented QC pass.
 
 1. `01_QC_clustering.R`  
    Build the upstream single-cell object if reprocessing from raw public data.
