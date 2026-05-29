@@ -1,48 +1,52 @@
-# STEP11_LIANA_PATCH_NOTE
+# LIANA directional-concordance note
+
+This note documents the focused LIANA directional-concordance analysis used in the revised manuscript.
 
 ## Purpose
 
-This Step 11 patch adds a minimal LIANA directional-concordance analysis requested during final cross-check. It resolves a Methods/Results/Figure legend/Supplementary consistency gap without changing the manuscript positioning.
+The LIANA analysis was added as a cross-method transcriptomic concordance check for predefined MIF- and SPP1-related ligand-receptor axes. It complements the patient-aware ligand summaries, CellChat analysis, NicheNet frameworks, and expression-level ligand-receptor compatibility checks.
 
-## Analysis scope
+The analysis is restricted to the GlycoHigh-to-tumor-immune direction and is intended to evaluate whether the predefined MIF/SPP1 axes show directionally supportive transcriptomic evidence across ligand-receptor inference methods.
 
-The analysis compares predefined MIF- and SPP1-related ligand-receptor axes in the following restricted sender-receiver framework:
+## Active script
 
-- Sender groups: GlycoHigh tumor-derived hepatocytes and GlycoLow tumor-derived hepatocytes
-- Receiver groups: tumor T/NK-lineage cells and tumor myeloid cells
-- Candidate axes: MIF-CD74, MIF-CXCR4, MIF-CD44, SPP1-CD44, SPP1-ITGAV, SPP1-ITGB1, SPP1-ITGA4, SPP1-ITGB5, and SPP1-ITGB6
+The active script is:
 
-## Key output
+```text
+18_LIANA_directional_concordance.R
+```
 
-Among 18 predefined axis-receiver combinations, 14 showed stronger aggregate ranks for GlycoHigh hepatocytes than for GlycoLow hepatocytes, four showed equal ranks, and none favored GlycoLow hepatocytes.
+## Manuscript and supplementary locations
+
+The LIANA directional-concordance analysis supports the following manuscript components:
+
+* Methods section on NicheNet, expression-level ligand-receptor sensitivity analyses, and LIANA directional-concordance analysis
+* Results section on candidate SPP1 and MIF communication layers
+* Figure 4
+* Supplementary Figure S8
+* Supplementary Table S4
+* Cover letter statement on cross-method transcriptomic concordance support
 
 ## Interpretation boundary
 
-LIANA was used only as a cross-method directional-concordance check. It must not be interpreted as:
+The LIANA analysis provides cross-method directional concordance only.
 
-- functional ligand-receptor validation
-- mechanistic proof
-- ligand secretion evidence
-- receptor activation evidence
-- spatial proximity evidence
-- direct signaling evidence
-- treatment-response evidence
-- clinical decision support
+It should not be interpreted as:
 
-## Manuscript wording
+* functional validation;
+* mechanistic proof;
+* ligand secretion evidence;
+* receptor activation evidence;
+* spatial proximity evidence;
+* direct immune-suppression evidence;
+* treatment-response evidence;
+* treatment-response prediction;
+* clinical decision support.
 
-Use: candidate / inference-based / directional concordance / cross-method support.
+MIF and SPP1 are therefore interpreted as candidate, inferred, complementary communication or transcriptional-response layers requiring orthogonal validation.
 
-Avoid: validated communication / functional validation / proven signaling / drive / mediate / mechanistic validation.
+## Relationship to other communication analyses
 
-## Related files
+The LIANA analysis does not replace CellChat, NicheNet, or expression-level ligand-receptor compatibility checks. Instead, it provides an additional low-dependency directional-concordance check for the predefined MIF/SPP1 axes.
 
-- `15_LIANA_directional_concordance.R`
-- `results/LIANA_directional_concordance/LIANA_group_counts.csv`
-- `results/LIANA_directional_concordance/Supplementary_Table_S4_LIANA_full_results.tsv`
-- `results/LIANA_directional_concordance/Supplementary_Table_S4_LIANA_aggregate_results.tsv`
-- `results/LIANA_directional_concordance/Supplementary_Table_S4_LIANA_candidate_axes.tsv`
-- `results/LIANA_directional_concordance/LIANA_direction_counts.tsv`
-- `results/LIANA_directional_concordance/Figure4D_LIANA_directional_concordance.pdf`
-- `results/LIANA_directional_concordance/Figure4D_LIANA_directional_concordance.png`
-- `results/LIANA_directional_concordance/sessionInfo_LIANA.txt`
+Because ligand-receptor algorithms rely on different prior databases and scoring assumptions, no single communication analysis is interpreted as functional validation.
