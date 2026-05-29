@@ -1,24 +1,81 @@
 # ============================================================
-# 15_LIANA_directional_concordance.R
-# Step 11-L1 LIANA directional-concordance patch
+
+# 18_LIANA_directional_concordance.R
+
 #
+
 # Purpose:
-#   Cross-method directional support for predefined MIF/SPP1 axes
-#   in the GlycoHigh-to-tumor-immune direction.
+
+# Cross-method directional-concordance analysis for predefined
+
+# MIF- and SPP1-related ligand-receptor axes in the
+
+# GlycoHigh-to-tumor-immune direction.
+
 #
-# Input object confirmed in Step 11:
-#   D:/scRNA_project/hcc_seurat.rds
-#   celltype column: celltype_original
-#   GlycoHigh/GlycoLow column: celltype_glyco
-#   patient column: orig.ident
-#   tissue column: site
+
+# Manuscript alignment:
+
+# This script supports the focused LIANA directional-concordance
+
+# analysis described in the revised manuscript, Figure 4,
+
+# Supplementary Figure S8, Supplementary Table S4, and the
+
+# repository documentation.
+
 #
-# Boundary:
-#   This analysis provides directional concordance only.
-#   It is not functional validation, mechanistic proof,
-#   spatial proximity evidence, treatment-response prediction,
-#   or a clinical model.
+
+# Local input note:
+
+# This script was executed with a local Seurat object and local
+
+# metadata column names. These local names may differ from the
+
+# locked analysis conventions listed in README.md, but the
+
+# biological grouping is the same:
+
+# - GlycoHigh tumor-derived hepatocytes
+
+# - GlycoLow tumor-derived hepatocytes
+
+# - tumor T/NK-lineage receiver cells
+
+# - tumor myeloid receiver cells
+
+#
+
+# Input object used for this LIANA concordance analysis:
+
+# D:/scRNA_project/hcc_seurat.rds
+
+# celltype column: celltype_original
+
+# GlycoHigh/GlycoLow column: celltype_glyco
+
+# patient column: orig.ident
+
+# tissue column: site
+
+#
+
+# Interpretation boundary:
+
+# This analysis provides cross-method directional concordance only.
+
+# It is not functional validation, mechanistic proof, ligand
+
+# secretion evidence, receptor activation evidence, spatial
+
+# proximity evidence, direct immune-suppression evidence,
+
+# treatment-response evidence, treatment-response prediction,
+
+# treatment-selection evidence, or a clinical decision model.
+
 # ============================================================
+
 
 setwd("D:/scRNA_project")
 
