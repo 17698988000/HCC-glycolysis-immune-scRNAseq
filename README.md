@@ -2,7 +2,7 @@
 
 This repository contains analysis scripts and reproducibility documentation for the revised Journal of Translational Medicine manuscript on a GlycoHigh malignant-hepatocyte metabolic-immune state and a compact four-gene tissue-level readout in hepatocellular carcinoma.
 
-**Current manuscript alignment:** Step-11 cross-checked manuscript package
+**Current manuscript alignment:** current revised manuscript package  
 `JTM_revision_working_version_v1_2026-05-27_step11_crosscheck_minorfix_v6.docx`
 
 ## Study scope and interpretation boundaries
@@ -81,7 +81,7 @@ Public datasets used in the current manuscript package:
 
 ## Archived and historical scripts
 
-The `archive_not_used/` folder contains scripts retained for transparency but not used in the current Step-11 cross-checked manuscript package.
+The `archive_not_used/` folder contains scripts retained for transparency but not used in the current revised manuscript package.
 
 The following analyses are not part of the active manuscript workflow:
 
