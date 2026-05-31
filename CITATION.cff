@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the associated manuscript."
+title: "HCC GlycoHigh malignant-hepatocyte state: analysis code and locked source tables"
+type: software
+authors:
+  - family-names: Xu
+    given-names: Guoxuan
+  - family-names: Tang
+    given-names: Bo
+version: 1.0.0-submission
+license: MIT
+repository-code: "https://github.com/17698988000/HCC-glycolysis-immune-scRNAseq"

@@ -1,36 +1,26 @@
-# Recommended run order for the current manuscript
+# Recommended run order
 
-This document describes the recommended execution order for the analysis scripts supporting the revised manuscript. It is intended for reproducibility, source/QC generation, and interpretation-boundary tracking, not for creating new manuscript claims or replacing locked manuscript figures without a documented QC pass.
+Run scripts from the repository root. The repository contains compact locked source tables and analysis scripts; large public-data downloads and local intermediate RDS files are intentionally excluded.
 
-1. `01_QC_clustering.R`  
-   Build the upstream single-cell object if reprocessing from raw public data.
+| Step | Script | Role |
+| ---: | --- | --- |
+| 1 | `scripts/01_QC_clustering.R` | Upstream single-cell QC, integration, clustering, and annotation |
+| 2 | `scripts/02_glycolysis_scoring.R` | Validate and export the authoritative rank-balanced Figure 2C GlycoHigh/GlycoLow assignment |
+| 3 | `scripts/06_inferCNV_malignant.R` | Malignant-feature marker and inferCNV support |
+| 4 | `scripts/16_patient_level_ligand_effects.R` | Patient-aware MIF/SPP1/PTGES summaries aligned to Figure 3 and Supplementary Table S3 |
+| 5 | `scripts/03_cellchat_analysis.R` | CellChat inference-based communication support |
+| 6 | `scripts/15_NicheNet_analysis.R` | NicheNet transcriptional-response sensitivity analyses |
+| 7 | `scripts/18_LIANA_directional_concordance.R` | LIANA directional-concordance check for predefined MIF/SPP1 axes |
+| 8 | `scripts/11_spatial_transcriptomics.R` | Spatial transcriptomic and RCTD-related support |
+| 9 | `scripts/07_LASSO_risk_score.R` | TCGA four-gene tissue-level readout and repeated-CV stability analysis |
+| 10 | `scripts/10_GSE14520_validation.R` | External fixed-coefficient survival evaluation |
+| 11 | `scripts/12_GSE235863_exploratory_association.R` | Exploratory anti-PD-1 plus lenvatinib association only |
+| 12 | `scripts/08_glycolysis_gradient.R` | Locked Supplementary Figure S15 redraw from compact source table |
+| 13 | `scripts/09_TF_activity.R` | Auxiliary TF-activity analysis |
+| 14 | `scripts/14_OXPHOS_metabolic_specificity.R` and `scripts/17_partial_correlation_metabolic_specificity.R` | Auxiliary metabolic-specificity analyses |
 
-2. `02_glycolysis_scoring.R`  
-   Confirm locked tumor-derived hepatocyte counts and GlycoHigh/GlycoLow grouping.
+## Notes
 
-3. `06_inferCNV_malignant.R`  
-   Generate marker-score source/QC outputs and optional inferCNV/CNV support when local inferCNV dependencies are present.
-
-4. `16_patient_level_ligand_effects.R`  
-   Generate patient-level ligand robustness summaries for SPP1, MIF, and PTGES.
-
-5. `03_cellchat_analysis.R`, `15_NicheNet_analysis.R`, and `18_LIANA_directional_concordance.R`
-   Generate or guard inference-based communication, ligand-activity, and Step 11 LIANA directional-concordance outputs.
-   LIANA is restricted to predefined MIF/SPP1 axes and must not be interpreted as functional validation, mechanistic proof, spatial proximity evidence, treatment-response evidence, or clinical decision support.
-
-6. `14_OXPHOS_metabolic_specificity.R` and `17_partial_correlation_metabolic_specificity.R`  
-   Generate metabolic-specificity source/QC outputs.
-
-7. `11_spatial_transcriptomics.R` plus retained scripts in `revision_figure_restore/`  
-   Generate Visium/RCTD spatial support and retained spatial supplementary/model-diagnostic visualizations.
-
-8. `07_LASSO_risk_score.R` and `10_GSE14520_validation.R`  
-   Generate TCGA-derived four-gene readout and external score-level survival evaluation. Continuous Cox modelling remains the primary survival framework.
-
-9. `12_GSE235863_exploratory_association.R`  
-   Generate descriptive GSE235863 source/QC outputs only. This script does not run ROC/PR/DCA/ML.
-
-10. `13_revision_analyses.R`  
-   Optional status/index check only. Do not use it to create new claims.
-
-Archived files under `archive_not_used/` are not part of the current manuscript run order.
+- `scripts/utils/locked_fig2c_groups.R` is the authoritative downstream grouping helper.
+- Two cells share the Figure 2C median AUCell score. Do not recreate groups using a simple `> median` comparison.
+- Manuscript figures are submitted separately and are not required in the code repository.

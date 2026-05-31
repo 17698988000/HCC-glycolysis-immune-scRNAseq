@@ -1,39 +1,39 @@
-# HCC GlycoHigh malignant-hepatocyte state repository
+# HCC GlycoHigh malignant-hepatocyte state
 
-This repository contains analysis scripts and reproducibility documentation for the revised Journal of Translational Medicine manuscript on a GlycoHigh malignant-hepatocyte metabolic-immune state and a compact four-gene tissue-level readout in hepatocellular carcinoma.
+Analysis code and locked source tables for a discovery-stage hepatocellular carcinoma transcriptomic study integrating single-cell, spatial, and retrospective bulk-cohort analyses.
 
-**Current manuscript alignment:** current revised manuscript package  
-`JTM_revision_working_version_v1_2026-05-27_step11_crosscheck_minorfix_v6.docx`
+## Study scope
 
-## Study scope and interpretation boundaries
+This repository supports a **hypothesis-generating** analysis package. It is not a clinical-ready prognostic assay, treatment-selection model, or mechanistic-validation package.
 
-This repository supports a discovery-stage and hypothesis-generating transcriptomic study. It should not be interpreted as a clinical-ready prognostic assay, treatment-selection model, or mechanistic validation package.
+Key interpretation boundaries:
 
-Key boundaries:
+- The TPI1/ENO1/LDHA/SLC2A1 score is a tissue-level readout of GlycoHigh biology, not an implemented clinical assay.
+- SPP1 and MIF are candidate, inferred, complementary communication or transcriptional-response layers.
+- CellChat, NicheNet, expression-level ligand-receptor compatibility, and LIANA outputs are transcriptomic inference support, not functional validation.
+- GSE235863 is used only for exploratory association analysis in a small, class-imbalanced cohort.
+- inferCNV is used as malignant-feature support, not as a perfect single-cell truth label.
 
-* The TPI1/ENO1/LDHA/SLC2A1 score is a tissue-level readout of GlycoHigh biology, not an implemented clinical assay.
-* ENO1 is retained as an interpretable component of the four-gene readout, not as a stand-alone mechanistic driver or single-gene main theme.
-* SPP1 and MIF analyses support candidate, inferred, complementary communication or transcriptional-response layers only.
-* CellChat, NicheNet, expression-level ligand-receptor compatibility, and LIANA analyses are inference-based transcriptomic support, not functional validation of ligand secretion, receptor activation, immune suppression, or treatment response.
-* GSE235863 is used only for exploratory anti-PD-1 plus lenvatinib association analysis (n = 15; non-responders, n = 4). The active repository does not include ROC, PR, DCA, complex machine learning, or treatment-selection analysis for this cohort.
-* inferCNV outputs are used as malignancy/CNV support only, not as mechanistic validation.
-* GSE125449 is archived/not used in the current manuscript package.
+## Submission-locked conventions
 
-## Locked analysis conventions
+The authoritative Figure 2C assignment is stored in:
 
-The locked single-cell analysis conventions are:
+```text
+locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv
+```
 
-* Primary object: `seurat_final.rds`
-* Patient column: `patient`
-* Cell-type column: `cell_type`
-* Site column: `site`
-* Glycolysis activity column: `Glycolysis_AUC`
-* Tumor-derived hepatocytes: `site == "Tumor" & cell_type == "Hepatocyte"`
-* Tumor-derived hepatocytes: n = 15,391
-* GlycoHigh cells: n = 7,695
-* GlycoLow cells: n = 7,696
+Locked single-cell scope:
 
-The locked TCGA-derived four-gene tissue-level readout is:
+| Item | Locked value |
+| --- | ---: |
+| Tumor-derived hepatocytes | 15,391 |
+| Median AUCell glycolysis score | 0.212617779598525 (displayed as 0.213) |
+| Cells tied at the median | 2 |
+| GlycoHigh | 7,695 |
+| GlycoLow | 7,696 |
+| Grouping rule | Rank-balanced split using the locked Figure 2C assignment table |
+
+The locked TCGA-derived tissue-level readout is:
 
 ```text
 score = 0.3041908 * TPI1 +
@@ -42,68 +42,42 @@ score = 0.3041908 * TPI1 +
         0.2424239 * SLC2A1
 ```
 
-The score was derived from TCGA-LIHC primary tumor survival-matched samples (n = 365). The lambda.min model retained four genes; the conservative lambda.1se model was null and is treated as an important limitation.
+The lambda.min model retained four genes. The conservative lambda.1se model was null and is treated as an important limitation.
 
-## Data resources
-
-Public datasets used in the current manuscript package:
-
-| Dataset   | Role in manuscript                                   | Boundary                                                                                    |
-| --------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| GSE149614 | Single-cell discovery layer                          | Paired tumor/non-tumor HCC single-cell analysis; eight paired patients used after filtering |
-| GSE238264 | Spatial transcriptomic support                       | Four Visium HCC sections; spot-level co-enrichment only                                     |
-| TCGA-LIHC | Bulk tissue-level discovery and clinical association | Retrospective score-level association; not clinical deployment                              |
-| GSE14520  | External score-level survival evaluation             | External survival association using fixed TCGA-derived coefficients                         |
-| GSE235863 | Exploratory anti-PD-1 plus lenvatinib association    | Small, class-imbalanced cohort; hypothesis-generating only                                  |
-| GSE125449 | Archived/not used                                    | Not part of the active current manuscript package                                           |
-
-## Active scripts
-
-| File                                             | Current role                                                                                             |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `01_QC_clustering.R`                             | Upstream single-cell QC, integration, clustering, and annotation workflow                                |
-| `02_glycolysis_scoring.R`                        | GlycoHigh/GlycoLow source and QC generation using the locked glycolysis activity score                   |
-| `03_cellchat_analysis.R`                         | CellChat source/QC workflow; inference-based communication support only                                  |
-| `04_TCGA_validation.R`                           | TCGA-LIHC survival and clinical association support                                                      |
-| `06_inferCNV_malignant.R`                        | Marker-score and inferCNV/CNV support for malignant-feature assessment                                   |
-| `07_LASSO_risk_score.R`                          | TCGA-derived four-gene LASSO/Cox tissue-level readout construction                                       |
-| `08_glycolysis_gradient.R`                       | Auxiliary glycolysis-gradient source/QC analysis in tumor-derived hepatocytes                            |
-| `09_TF_activity.R`                               | Auxiliary TF-activity source/QC analysis; not a mechanistic validation assay                             |
-| `10_GSE14520_validation.R`                       | External score-level survival evaluation of the locked four-gene readout in GSE14520                     |
-| `11_spatial_transcriptomics.R`                   | GSE238264 Visium spatial analysis and RCTD-related source/QC outputs                                     |
-| `12_GSE235863_exploratory_association.R`         | GSE235863 descriptive, hypothesis-generating association script; no ROC/PR/DCA/ML                        |
-| `13_revision_analyses.R`                         | Status/index script only; not a source of additional biological or clinical claims                       |
-| `14_OXPHOS_metabolic_specificity.R`              | OXPHOS/metabolic-specificity source/QC support                                                           |
-| `15_NicheNet_analysis.R`                         | NicheNet reproduction-guard and sensitivity script; inference-based only                                 |
-| `16_patient_level_ligand_effects.R`              | Patient-level ligand mean-expression robustness source/QC analysis                                       |
-| `17_partial_correlation_metabolic_specificity.R` | Partial Spearman metabolic-specificity analysis for glycolysis/OXPHOS context                            |
-| `18_LIANA_directional_concordance.R`             | LIANA directional-concordance check for predefined MIF/SPP1 axes; candidate inference-based support only |
-
-## Archived and historical scripts
-
-The `archive_not_used/` folder contains scripts retained for transparency but not used in the current revised manuscript package.
-
-The following analyses are not part of the active manuscript workflow:
-
-* GSE125449 validation scripts
-* Legacy GSE235863 ROC/AUC, drug-repurposing, or treatment-selection scripts
-* ENO1-centered restoration scripts
-* Historical figure-restoration scripts that are not authoritative for the current Figure 1-7 workflow
-
-Archived scripts should not be cited as evidence for the submitted manuscript.
-
-## Manuscript-to-repository map
-
-Use `MANUSCRIPT_TO_REPOSITORY_MAP.tsv` as the authoritative map between the current manuscript, supplementary materials, scripts, and interpretation boundaries.
-
-Use `RUN_ORDER.md` for the recommended execution order. Some large public-data downloads, Seurat object construction, inferCNV objects, RCTD objects, and locked figure outputs require local source objects or previously generated intermediate files. Scripts are intended for transparent reproducibility and source/QC generation, not for changing locked manuscript figures unless a new QC pass is documented.
-
-## Code availability
-
-All R analysis scripts used in this study are available at:
+## Repository structure
 
 ```text
-https://github.com/17698988000/HCC-glycolysis-immune-scRNAseq
+scripts/                 active analysis scripts
+scripts/utils/           shared locked-assignment helper
+locked_source_data/      compact authoritative source tables used for the submission release
+reproducibility/         current author environment snapshot and refresh script
+docs/                    method-specific notes
+archive_not_used/        manifest of revision-era materials omitted from the public release
 ```
 
-The repository supports the current discovery-stage transcriptomic manuscript package and should not be interpreted as a clinical-ready prognostic assay, treatment-selection model, or mechanistic validation package.
+Generated figures and large intermediate objects are intentionally not committed. Manuscript figures are submitted separately; scripts and compact locked source tables are retained here for reproducibility and provenance.
+
+## Public data resources
+
+| Dataset | Manuscript role | Boundary |
+| --- | --- | --- |
+| GSE149614 | Single-cell discovery | Eight paired HCC patients after filtering |
+| GSE238264 | Spatial support | Four Visium sections; spot-level co-enrichment only |
+| TCGA-LIHC | Bulk discovery and clinical association | Retrospective tissue-level association |
+| GSE14520 | External survival evaluation | Fixed TCGA-derived coefficients |
+| GSE235863 | Exploratory treatment-associated analysis | Small, class-imbalanced; hypothesis-generating only |
+
+## Reproducing the workflow
+
+Run scripts from the repository root. Large public-data downloads and intermediate RDS objects are not committed. Set local paths with environment variables where needed, for example:
+
+```r
+Sys.setenv(SEURAT_FINAL_RDS = "path/to/seurat_final.rds")
+Sys.setenv(PROJECT_DIR = "path/to/repository")
+```
+
+See [`RUN_ORDER.md`](RUN_ORDER.md) for the recommended execution sequence and [`MANUSCRIPT_TO_REPOSITORY_MAP.tsv`](MANUSCRIPT_TO_REPOSITORY_MAP.tsv) for the figure-to-script map.
+
+## License
+
+Code is released under the [MIT License](LICENSE).

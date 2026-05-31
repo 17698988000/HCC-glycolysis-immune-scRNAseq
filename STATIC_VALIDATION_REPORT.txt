@@ -1,0 +1,24 @@
+JTM professional repository candidate: static and locked-source validation report
+
+Active R scripts checked: 17
+Required release files missing: 0
+Active-script stale-pattern issues: 0
+
+Locked-source checks:
+  [PASS] Figure2C rows: observed=15391; expected=15391
+  [PASS] Figure2C GlycoHigh: observed=7695; expected=7695
+  [PASS] Figure2C GlycoLow: observed=7696; expected=7696
+  [PASS] Figure2C median: observed=0.212617779598525; expected=0.212617779598525
+  [PASS] Figure2C median ties: observed=2; expected=2
+  [PASS] S15 total cells: observed=15391; expected=15391
+  [PASS] S15 bins: observed=10; expected=10
+  [PASS] MIF mean-expression effect: observed=0.388430054044444; expected=0.388430054044444
+  [PASS] SPP1 mean-expression effect: observed=0.528703671019763; expected=0.528703671019763
+  [PASS] PTGES mean-expression effect: observed=0.008403371335379; expected=0.00840337133537907
+  [PASS] TPI1 repeated-CV lambda.min frequency: observed=1.0; expected=1.0
+  [PASS] ENO1 repeated-CV lambda.min frequency: observed=1.0; expected=1.0
+  [PASS] LDHA repeated-CV lambda.min frequency: observed=1.0; expected=1.0
+  [PASS] SLC2A1 repeated-CV lambda.min frequency: observed=1.0; expected=1.0
+
+Important limitation: this report validates repository structure, stale-pattern removal, and compact locked-source tables. It does not execute the R analysis pipeline. Runtime validation remains pending before final release.
+Static validation status: PASS_WITH_RUNTIME_VALIDATION_PENDING

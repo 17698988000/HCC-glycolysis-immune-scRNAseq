@@ -1,21 +1,18 @@
 # Data and claim boundaries
 
-## Dataset roles
+This repository supports a discovery-stage, hypothesis-generating transcriptomic analysis. It does not provide clinical-deployment software or functional-validation evidence.
 
-| Dataset | Current role | Boundary |
-|---|---|---|
-| GSE149614 | single-cell discovery layer | Defines GlycoHigh malignant-hepatocyte state; retrospective transcriptomic evidence only. |
-| GSE238264 | spatial transcriptomics support | Spot-level tissue co-enrichment after composition adjustment; not same-cell expression or direct ligand-receptor contact. |
-| TCGA-LIHC | bulk discovery and clinical association | Four-gene tissue-level readout construction and score-level survival association; not a clinical-ready assay. |
-| GSE14520 | external score-level survival evaluation | External evaluation using TCGA-derived coefficients; not clinical validation. |
-| GSE235863 | exploratory anti-PD-1 plus lenvatinib association | Underpowered (n = 15; non-responders = 4); descriptive/hypothesis-generating only. |
-| GSE125449 | archived / not used in current manuscript | Removed from current dataset census; retained only in `archive_not_used/` for historical traceability. |
+## Boundaries by analytical layer
 
-## Claim boundaries
+| Layer | Supported interpretation | Not established |
+| --- | --- | --- |
+| Single-cell GlycoHigh state | Rank-balanced AUCell-defined malignant-hepatocyte state | Mechanistic driver status |
+| MIF/SPP1 ligand analyses | Patient-aware expression association and inference-based candidate layers | Ligand secretion, receptor activation, direct immune suppression |
+| Spatial transcriptomics | Spot-level co-enrichment after composition adjustment | Single-cell contact or direct signaling |
+| Four-gene readout | Retrospective tissue-level association | Finalized clinical prognostic model |
+| GSE235863 | Exploratory non-response association | Treatment-benefit prediction or decision support |
+| inferCNV | Malignant-feature support | Perfect single-cell truth label |
 
-- Use: discovery-stage, hypothesis-generating, tissue-level readout, candidate/inferred/complementary communication layers, CNV/malignancy support.
-- Avoid: validated predictor, clinical assay, clinical classifier, treatment-selection model, functional validation, causal mechanism, same-cell co-expression, clinical implementation.
+## Locked Figure 2C rule
 
-## GSE235863 note
-
-The current manuscript removed ROC/PR/performance-oriented GSE235863 analysis. The active script is limited to score distribution, median-stratified descriptive summary, Wilcoxon comparison, and Fisher exact summary.
+The active workflow uses `locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv`. Two cells share the median AUCell score. Downstream scripts therefore read the locked rank-balanced assignment instead of recreating groups with a simple threshold comparison.
