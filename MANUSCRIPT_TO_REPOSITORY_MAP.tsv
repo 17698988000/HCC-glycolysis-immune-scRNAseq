@@ -1,46 +1,12 @@
-Manuscript component	Repository script or documentation	Current repository role	Interpretation boundary
-Overall repository scope	README.md	Repository overview for the revised manuscript package	Supports a discovery-stage and hypothesis-generating transcriptomic study only
-Code availability	CODE_AVAILABILITY_NOTE.md	Final code-availability statement and repository URL	Not a clinical-ready assay, treatment-selection model, or mechanistic validation package
-Run order	RUN_ORDER.md	Recommended execution order for active scripts	For reproducibility and source/QC generation; not for creating new manuscript claims
-Claim boundaries	DATA_AND_CLAIM_BOUNDARIES.md	Repository-level interpretation and claim-control documentation	Defines discovery-stage, inferred, candidate, and exploratory boundaries
-Single-cell QC and annotation	01_QC_clustering.R	Upstream single-cell QC, integration, clustering, and annotation workflow	Source/QC workflow only; not a source of new biological claims beyond the manuscript
-Glycolysis activity scoring	02_glycolysis_scoring.R	GlycoHigh/GlycoLow source and QC generation using the locked glycolysis activity score	Supports GlycoHigh/GlycoLow stratification within tumor-derived hepatocytes
-CellChat communication analysis	03_cellchat_analysis.R	CellChat source/QC workflow for inference-based communication support	Communication potential only; not functional validation or direct signaling proof
-TCGA-LIHC clinical association	04_TCGA_validation.R	TCGA-LIHC survival and clinical association support	Retrospective association only; not clinical deployment
-Malignant-feature and CNV support	06_inferCNV_malignant.R	Marker-score and inferCNV/CNV support for malignant-feature assessment	Malignancy/CNV support only; not mechanistic validation
-Four-gene readout construction	07_LASSO_risk_score.R	TCGA-derived four-gene LASSO/Cox tissue-level readout construction	Tissue-level readout construction only; not a finalized clinical assay
-Glycolysis-gradient sensitivity	08_glycolysis_gradient.R	Auxiliary glycolysis-gradient source/QC analysis in tumor-derived hepatocytes	Supports robustness of glycolysis-associated patterns; not a separate claim track
-TF activity source/QC	09_TF_activity.R	Auxiliary transcription-factor activity source/QC analysis	Not a mechanistic validation assay
-GSE14520 external survival evaluation	10_GSE14520_validation.R	External score-level survival evaluation of the locked four-gene readout	External score-level evaluation only; not clinical validation
-Spatial transcriptomics	11_spatial_transcriptomics.R	GSE238264 Visium spatial analysis and RCTD-related source/QC outputs	Spot-level co-enrichment only; not same-cell co-expression or direct contact evidence
-GSE235863 exploratory association	12_GSE235863_exploratory_association.R	Descriptive hypothesis-generating association analysis in GSE235863	Exploratory association only; no ROC, PR, DCA, complex ML, treatment-selection, or clinical decision support
-Revision index/status	13_revision_analyses.R	Status/index script only	Not a source of additional biological or clinical claims
-OXPHOS/metabolic specificity	14_OXPHOS_metabolic_specificity.R	Metabolic-specificity source/QC support	Contextual specificity analysis only
-NicheNet analysis	15_NicheNet_analysis.R	NicheNet reproduction-guard and sensitivity script	Inference-based transcriptional-response framework only; not functional validation
-Patient-level ligand effects	16_patient_level_ligand_effects.R	Patient-level ligand mean-expression robustness source/QC analysis	Patient-aware robustness support; not population-level definitive validation
-Partial correlation metabolic specificity	17_partial_correlation_metabolic_specificity.R	Partial Spearman metabolic-specificity analysis for glycolysis/OXPHOS context	Metabolic-specificity support only
-LIANA directional concordance	18_LIANA_directional_concordance.R	Focused LIANA directional-concordance analysis for predefined MIF/SPP1 axes	Cross-method directional concordance only; not functional validation, ligand secretion evidence, receptor activation evidence, spatial proximity evidence, treatment-response evidence, or clinical decision support
-LIANA documentation	LIANA_DIRECTIONAL_CONCORDANCE_NOTE.md	Repository documentation for the focused LIANA concordance analysis	Documents candidate/inferred MIF-SPP1 communication-layer boundaries
-Archived scripts	archive_not_used/	Transparency archive for analyses not used in the current revised manuscript package	Archived scripts are not active evidence for the submitted manuscript
-GSE125449 archive	archive_not_used/05_GSE125449_validation_NOT_USED_in_step8_final_manuscript.R	Historical script retained for transparency	GSE125449 is not used in the current revised manuscript package
-Legacy GSE235863 ROC/AUC archive	archive_not_used/12_drug_repurposing_NOT_USED_in_step8_final_manuscript.R	Historical script retained for transparency	Legacy ROC/AUC, drug-repurposing, treatment-selection, or clinical decision analyses are not part of the active manuscript workflow
-ENO1-centered restoration archive	archive_not_used/18_restore_FigS12_ENO1_glycolysis_per_patient_NOT_USED_in_step8_final_manuscript.R	Historical script retained for transparency	ENO1 is not treated as a stand-alone mechanistic driver or single-gene main theme
-Figure restoration archive	revision_figure_restore/	Historical figure-restoration scripts	Not authoritative for the current Figure 1-7 workflow unless explicitly documented
-Figure 1 workflow and atlas	README.md; RUN_ORDER.md; 01_QC_clustering.R; 02_glycolysis_scoring.R	Repository-level support for study design, atlas, and GlycoHigh/GlycoLow source workflow	Figure-level locked outputs should not be replaced without a documented QC pass
-Figure 2 GlycoHigh malignant-hepatocyte state	02_glycolysis_scoring.R; 06_inferCNV_malignant.R	Supports GlycoHigh/GlycoLow scoring and inferCNV/CNV support	inferCNV is malignancy/CNV support only
-Figure 3 patient-aware ligand features	16_patient_level_ligand_effects.R	Supports patient-level ligand effect summaries	Patient-aware transcriptomic robustness only; not functional validation
-Figure 4 candidate communication layers	03_cellchat_analysis.R; 15_NicheNet_analysis.R; 18_LIANA_directional_concordance.R; LIANA_DIRECTIONAL_CONCORDANCE_NOTE.md	Supports CellChat, NicheNet, expression-compatibility, and LIANA concordance documentation	Inference-based candidate communication layers only
-Figure 5 spatial support	11_spatial_transcriptomics.R	Supports RCTD-related spatial source/QC and composition-adjusted spatial analyses	Spot-level co-enrichment only
-Figure 6 four-gene readout and prognosis	04_TCGA_validation.R; 07_LASSO_risk_score.R; 10_GSE14520_validation.R	Supports score construction, TCGA association, and GSE14520 external score-level evaluation	Discovery-stage tissue-level readout only; not a deployment-ready prognostic assay
-Figure 6D TCGA time-dependent ROC	04_TCGA_validation.R; 07_LASSO_risk_score.R	Locked manuscript model-diagnostic output documented in manuscript tables and supplementary model diagnostics	Transparency diagnostic only; not evidence of clinical deployment readiness
-Figure 7 immune context and exploratory treatment association	12_GSE235863_exploratory_association.R; 14_OXPHOS_metabolic_specificity.R	Supports immune-context analyses and descriptive GSE235863 association	GSE235863 is exploratory only and underpowered for treatment-response prediction
-Supplementary Table S1	README.md; 02_glycolysis_scoring.R	Curated glycolysis gene-set documentation	Defines scoring input; not a new claim
-Supplementary Table S2	01_QC_clustering.R	Cell counts, annotation, and atlas-level support	Descriptive atlas support
-Supplementary Table S3	16_patient_level_ligand_effects.R	Patient-level ligand summaries and supportive expression/detection outputs	Patient-aware robustness support only
-Supplementary Table S4	03_cellchat_analysis.R; 11_spatial_transcriptomics.R; 15_NicheNet_analysis.R; 18_LIANA_directional_concordance.R	Communication, spatial, NicheNet, compatibility, and LIANA-related supplementary outputs	Inference-based and spatial co-enrichment support only
-Supplementary Figure S8	18_LIANA_directional_concordance.R; LIANA_DIRECTIONAL_CONCORDANCE_NOTE.md	Focused LIANA MIF/SPP1 directional-concordance output	Cross-method directional support only
-Supplementary Figure S26 benchmarking	04_TCGA_validation.R; 07_LASSO_risk_score.R; 10_GSE14520_validation.R	Benchmarking and contextual performance support	Contextual benchmarking only; not universal superiority or clinical deployment
-Leave-one-out/circularity sensitivity	02_glycolysis_scoring.R; README.md	Locked supplementary sensitivity output documented in the manuscript package	Supports multi-gene GlycoHigh interpretation rather than ENO1-only claims
-Depth/UMI technical sensitivity	02_glycolysis_scoring.R; README.md	Locked supplementary technical-sensitivity output	Technical robustness only; does not create a new biological claim
-Residual Moran spatial sensitivity	11_spatial_transcriptomics.R	Locked supplementary spatial-sensitivity output	Residual-dependence sensitivity only; not direct signaling or spatial-proximity evidence
-Repository audit	STEP9_REPOSITORY_AUDIT.tsv	Repository audit record retained for transparency	Historical audit support; current boundaries are defined by README and this map
+Manuscript component	Repository item	Role	Interpretation boundary
+Figure 2C	locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv	Authoritative 15,391-cell rank-balanced GlycoHigh/GlycoLow assignment	Score-defined state; not a UMAP cluster or mechanistic proof
+Figure 2D	scripts/06_inferCNV_malignant.R	Marker and inferCNV malignant-feature support	Supportive evidence only
+Figure 3 / Supplementary Table S3	scripts/16_patient_level_ligand_effects.R; locked_source_data/ligand/	Patient-aware MIF/SPP1/PTGES source tables	Association support; not direct immune-suppression evidence
+Figure 4 / Supplementary Figure S8	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R	Inference-based communication and directional-concordance analyses	Not functional validation
+Figure 5	scripts/11_spatial_transcriptomics.R	Spatial and RCTD-related support	Spot-level co-enrichment only
+Figure 6 / Supplementary Figure S14	scripts/07_LASSO_risk_score.R; locked_source_data/lasso/	TCGA four-gene tissue-level readout and model-selection stability	Discovery-stage tissue-level readout; not deployment-ready
+External survival evaluation	scripts/10_GSE14520_validation.R	Fixed-coefficient external evaluation	Retrospective association
+Exploratory treatment-associated analysis	scripts/12_GSE235863_exploratory_association.R	Small anti-PD-1 plus lenvatinib cohort analysis	Hypothesis-generating only
+Supplementary Figure S15	scripts/08_glycolysis_gradient.R; locked_source_data/supplementary_figures/FigS15_glycolysis_gradient_LOCKED_source.csv	15,391-cell equal-cell-count-bin descriptive gradient redraw	Not trajectory inference or functional evidence
+Supplementary Figure S16	scripts/09_TF_activity.R	Auxiliary TF-activity analysis	Not mechanistic validation
+Supplementary Figure S21	scripts/14_OXPHOS_metabolic_specificity.R; scripts/17_partial_correlation_metabolic_specificity.R	Auxiliary metabolic-specificity analyses	Contextual sensitivity support

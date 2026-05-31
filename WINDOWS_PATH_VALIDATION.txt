@@ -1,0 +1,6 @@
+HCC public submission candidate v2 validation
+File count: 49
+Maximum relative path length: 88
+Longest relative path: locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv
+Historical script bodies included: 0
+Generated PDF/PNG figure files included: 0

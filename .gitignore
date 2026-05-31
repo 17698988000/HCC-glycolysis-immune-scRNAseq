@@ -1,0 +1,19 @@
+﻿# R session files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Generated analysis outputs
+results/
+*.rds
+*.RDS
+
+# Large downloaded public-data files
+*.gz
+*.tar
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db

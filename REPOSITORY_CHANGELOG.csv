@@ -1,0 +1,76 @@
+path,action,reason
+scripts/01_QC_clustering.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/02_glycolysis_scoring.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/03_cellchat_analysis.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/04_TCGA_validation.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/06_inferCNV_malignant.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/07_LASSO_risk_score.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/08_glycolysis_gradient.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/09_TF_activity.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/10_GSE14520_validation.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/11_spatial_transcriptomics.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/12_GSE235863_exploratory_association.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/14_OXPHOS_metabolic_specificity.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/15_NicheNet_analysis.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/16_patient_level_ligand_effects.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/17_partial_correlation_metabolic_specificity.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+scripts/18_LIANA_directional_concordance.R,retain_and_relocate,Active manuscript-supporting script moved from repository root into scripts/.
+archive_not_used/historical_scripts/05_GSE125449_validation_NOT_USED_in_step8_final_manuscript.R,archive,Historical or not-used script retained for transparency outside active workflow.
+archive_not_used/historical_scripts/12_drug_repurposing_NOT_USED_in_step8_final_manuscript.R,archive,Historical or not-used script retained for transparency outside active workflow.
+archive_not_used/historical_scripts/18_restore_FigS12_ENO1_glycolysis_per_patient_NOT_USED_in_step8_final_manuscript.R,archive,Historical or not-used script retained for transparency outside active workflow.
+archive_not_used/historical_scripts/README.md,archive,Historical or not-used script retained for transparency outside active workflow.
+archive_not_used/historical_figure_restore/00_config_paths.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/00_run_selected_locked_figures.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/README.md,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig4E_SC_ENO1_SPP1_correlation.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig5B_ENO1_KM_optimal.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig5C_ENO1_AJCC_stage.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig5D_ENO1_Cox_forest.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig6A_four_gene_score_KM.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig6B_four_gene_score_Cox_forest.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_Fig9B_spatial_direction_consistency.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_FigS20_RCTD_celltype_composition.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_FigS24_calibration_TCGA_GSE14520.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/historical_figure_restore/plot_FigS25_GCK_sensitivity.R,archive,Historical figure-restoration helper moved out of active repository root.
+archive_not_used/internal_audits/STEP9_REPOSITORY_AUDIT.tsv,archive,Internal revision-era repository audit moved out of public root.
+docs/LIANA_DIRECTIONAL_CONCORDANCE_NOTE.md,relocate,Method-specific note moved into docs/.
+locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv,add_locked_source,Authoritative locked single-cell source table for submission release.
+locked_source_data/single_cell/B3_15391_FIXED_depth_adjusted_residual_quartile_check.csv,add_locked_source,Authoritative locked single-cell source table for submission release.
+locked_source_data/ligand/B2_patient_level_ligand_summary_FINAL15391_FIXEDGROUP.csv,add_locked_source,Locked patient-aware ligand source table aligned to Figure 3 and Supplementary Table S3.
+locked_source_data/ligand/B2_patient_level_ligand_means_FINAL15391_FIXEDGROUP.csv,add_locked_source,Locked patient-aware ligand source table aligned to Figure 3 and Supplementary Table S3.
+locked_source_data/ligand/B2_patient_level_ligand_detection_FINAL15391_FIXEDGROUP.csv,add_locked_source,Locked patient-aware ligand source table aligned to Figure 3 and Supplementary Table S3.
+locked_source_data/ligand/B2_mixed_effect_ligand_results_FINAL15391_FIXEDGROUP.csv,add_locked_source,Locked patient-aware ligand source table aligned to Figure 3 and Supplementary Table S3.
+locked_source_data/ligand/B2_ligand_detection_glm_results_FINAL15391_FIXEDGROUP.csv,add_locked_source,Locked patient-aware ligand source table aligned to Figure 3 and Supplementary Table S3.
+locked_source_data/lasso/LASSO_coefficients_FIXED_tumor_only.csv,add_locked_source,Locked four-gene coefficient and model-selection stability source table.
+locked_source_data/lasso/TCGA_repeated_CV_LASSO_selection_frequency.csv,add_locked_source,Locked four-gene coefficient and model-selection stability source table.
+locked_source_data/lasso/TCGA_repeated_CV_LASSO_lambda_summary.csv,add_locked_source,Locked four-gene coefficient and model-selection stability source table.
+locked_source_data/lasso/bootstrap_lasso_stability_summary.csv,add_locked_source,Locked four-gene coefficient and model-selection stability source table.
+locked_source_data/supplementary_figures/FigS15_glycolysis_gradient_LOCKED_source.csv,add_locked_source,"Locked Supplementary Figure S15 equal-cell-count-bin source table. Figure image itself remains part of submission files, not repository."
+reproducibility/current_author_sessionInfo.txt,add_reproducibility,Current author R-session snapshot captured for transparency.
+reproducibility/current_author_package_versions.csv,add_reproducibility,Current author package-version snapshot captured for transparency.
+scripts/utils/locked_fig2c_groups.R,create,Shared helper ensures all downstream scripts use the single authoritative rank-balanced Figure 2C grouping.
+scripts/02_glycolysis_scoring.R,rewrite,Replaced stale simple-threshold split with authoritative rank-balanced Figure 2C assignment table.
+scripts/08_glycolysis_gradient.R,rewrite,"Replaced stale equal-width-bin script with locked 15,391-cell equal-cell-count-bin redraw script."
+scripts/09_TF_activity.R,update,Use authoritative Figure 2C rank-balanced assignment helper; remove stale median-threshold grouping.
+scripts/14_OXPHOS_metabolic_specificity.R,update,Use authoritative Figure 2C rank-balanced assignment helper; remove stale median-threshold grouping.
+scripts/17_partial_correlation_metabolic_specificity.R,update,Use authoritative Figure 2C rank-balanced assignment helper; remove stale median-threshold grouping.
+scripts/16_patient_level_ligand_effects.R,update,Use locked Figure 2C grouping and update ligand QC targets to verified final Figure 3 / Supplementary Table S3 values.
+scripts/03_cellchat_analysis.R,update,Use authoritative rank-balanced Figure 2C assignments for CellChat sender groups.
+scripts/01_QC_clustering.R,update,Remove machine-specific D:/ path; allow optional PROJECT_DIR configuration.
+scripts/04_TCGA_validation.R,update,Remove machine-specific D:/ path; allow optional PROJECT_DIR configuration.
+scripts/18_LIANA_directional_concordance.R,update,Remove machine-specific paths and package installation at runtime; use environment-variable configuration.
+reproducibility/capture_session_info.R,create,Allow users to refresh current environment snapshot without modifying analysis scripts.
+LICENSE,create,Add MIT License requested by author.
+CITATION.cff,create,Add machine-readable citation metadata.
+.gitignore,create,"Prevent accidental commits of local sessions, generated outputs, large data files, and OS metadata."
+README.md,rewrite,Replace revision-era homepage with concise submission-release documentation.
+RUN_ORDER.md,rewrite,Document clean active workflow and authoritative rank-balanced grouping helper.
+DATA_AND_CLAIM_BOUNDARIES.md,rewrite,State release-level interpretation limits and grouping rule clearly.
+CODE_AVAILABILITY_NOTE.md,rewrite,Explain included and excluded repository materials without internal revision references.
+locked_source_data/README.md,create,Describe compact authoritative source tables.
+reproducibility/README.md,create,Clarify current-session snapshot versus original analysis environment.
+archive_not_used/README.md,create,Clearly separate historical materials from active manuscript workflow.
+RELEASE_CHECKLIST.md,create,Provide explicit pre-release checklist including environment-snapshot caveat.
+MANUSCRIPT_TO_REPOSITORY_MAP.tsv,rewrite,Replace revision-era map with concise submission-release map.
+STATIC_VALIDATION_REPORT.txt,create,Document static checks and explicit run-time-validation limitation.
+scripts/03_cellchat_analysis.R; scripts/06_inferCNV_malignant.R,comment_cleanup,Remove literal machine-specific path examples from active-script comments to keep public static checks clean.
