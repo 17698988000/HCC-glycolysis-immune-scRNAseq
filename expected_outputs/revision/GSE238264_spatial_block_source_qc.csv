@@ -1,0 +1,25 @@
+metric,value
+sample,HCC1R
+matrix_barcodes,3006
+spots_after_qc,2653
+min_features,200
+max_percent_mt,25
+block_definition,fixed 6x6 array-coordinate bins
+sample,HCC2R
+matrix_barcodes,2766
+spots_after_qc,1709
+min_features,200
+max_percent_mt,25
+block_definition,fixed 6x6 array-coordinate bins
+sample,HCC3R
+matrix_barcodes,2170
+spots_after_qc,2101
+min_features,200
+max_percent_mt,25
+block_definition,fixed 6x6 array-coordinate bins
+sample,HCC4R
+matrix_barcodes,3002
+spots_after_qc,2999
+min_features,200
+max_percent_mt,25
+block_definition,fixed 6x6 array-coordinate bins

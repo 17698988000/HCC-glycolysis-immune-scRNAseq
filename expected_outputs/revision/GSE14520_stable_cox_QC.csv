@@ -1,0 +1,3 @@
+model,n,events,all_coefficients_finite,all_confidence_intervals_finite,maximum_hazard_ratio,score_hazard_ratio,score_CI95_low,score_CI95_high,score_p_value,separation_check_pass
+primary_stable_binary_model,218,85,True,True,3.705327790175283,1.3855755321444456,1.1018067711052575,1.742428532501694,0.0052845608977293715,True
+with_size_stable_binary_model,217,85,True,True,3.6822769866294047,1.3280724659412353,1.0574173768653847,1.6680040572245793,0.014682977195134894,True

@@ -1,0 +1,20 @@
+Public frozen release audit
+
+Repository:
+https://github.com/17698988000/HCC-glycolysis-immune-scRNAseq
+
+Tag:
+v1.0.0-submission
+
+Verified commit:
+748a3d94940d5d31eafb876ddc5b9594f9f1d3d5
+
+Key findings:
+- The release contains compact locked source tables for Figure 2C grouping,
+  patient-aware ligand summaries, LASSO coefficients, and stability summaries.
+- The release contains active R scripts for the single-cell, ligand,
+  communication, spatial, TCGA, GSE14520, and exploratory workflows.
+- Large Seurat objects, spatial spot source tables, RCTD proportion tables,
+  and participant-level GSE14520 source tables are intentionally excluded.
+- The completed patient-internal grouping stability analysis uses only the
+  authoritative locked Figure 2C cell-level assignment table.

@@ -1,0 +1,10 @@
+metric,value
+n_cells,15391
+n_patients,8
+locked_original_GlycoHigh_n,7695
+locked_original_GlycoLow_n,7696
+leave_four_out_global_concordance_with_locked_group,0.8379572477421869
+leave_four_out_patient_internal_concordance_with_locked_group,0.7647326359560782
+spearman_leave_four_out_vs_locked_AUCell,0.858910081057739
+spearman_leave_four_out_vs_22_gene_mean_logexpr,0.914643581761877
+interpretation_boundary,Expression-level locked-gene sensitivity; not a re-optimized replacement for the primary AUCell state definition

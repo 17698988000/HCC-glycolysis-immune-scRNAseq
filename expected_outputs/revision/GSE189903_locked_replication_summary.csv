@@ -1,0 +1,7 @@
+score,feature,n_patients,n_positive_effect,mean_effect_High_minus_Low,median_effect_High_minus_Low,paired_wilcoxon_p,n_positive_spearman,median_spearman_rho,paired_wilcoxon_FDR_within_score
+locked_22_gene_rank_score,MIF,4,4,0.46857414462262253,0.4015737117474347,0.125,4,0.21450648365221558,0.1875
+locked_22_gene_rank_score,SPP1,4,1,0.009780518866603707,-0.011889402236484714,1.0,2,0.03167909740478404,1.0
+locked_22_gene_rank_score,four_gene_readout,4,4,0.9750716279745522,0.9188579726223385,0.125,4,0.4182870977176524,0.1875
+leave_four_out_18_gene_rank_score,MIF,4,4,0.3591727145130438,0.2691497974131112,0.125,4,0.1538146126742648,0.1875
+leave_four_out_18_gene_rank_score,SPP1,4,1,-0.013120447451673789,-0.008993438085640664,0.75,2,0.03549558090405465,0.75
+leave_four_out_18_gene_rank_score,four_gene_readout,4,4,0.6650570227277337,0.6346008910389662,0.125,4,0.3273497429018364,0.1875

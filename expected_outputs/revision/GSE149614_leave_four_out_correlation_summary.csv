@@ -1,0 +1,7 @@
+score,feature,n_patients,n_positive_spearman,median_spearman_rho,min_spearman_rho,max_spearman_rho
+leave_four_out_18_gene_mean_logexpr_score,MIF,8,7,0.12724360375406354,-0.08382787842348535,0.5083676064825638
+leave_four_out_18_gene_mean_logexpr_score,SPP1,8,7,0.1476598766989728,-0.0023157330632994732,0.5437136894587686
+leave_four_out_18_gene_mean_logexpr_score,four_gene_readout,8,8,0.44902158726793573,0.15510447788156975,0.6017667228089705
+locked_original_Glycolysis_AUC,MIF,8,8,0.2013662096341432,0.10228026747800494,0.5560772431764208
+locked_original_Glycolysis_AUC,SPP1,8,8,0.0971800440091981,0.011939813142876168,0.5581867774693781
+locked_original_Glycolysis_AUC,four_gene_readout,8,8,0.6850531249299695,0.5859511218342512,0.7701132939976425

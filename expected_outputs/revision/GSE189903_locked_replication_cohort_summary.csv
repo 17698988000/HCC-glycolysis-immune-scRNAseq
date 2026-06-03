@@ -1,0 +1,5 @@
+patient,n_tumor_malignant_cells,n_samples,samples,GlycoHigh_22_n,GlycoLow_22_n,GlycoHigh_leave_four_out_n,GlycoLow_leave_four_out_n
+HCC1,636,3,1HT1;1HT2;1HT3,358,278,349,287
+HCC2,45,2,2HT2;2HT3,11,34,16,29
+HCC3,46,2,3HT2;3HT3,20,26,26,20
+HCC4,395,3,4HT1;4HT2;4HT3,172,223,170,225

@@ -1,0 +1,10 @@
+strategy,feature,n_patients,n_positive_effect,mean_effect_High_minus_Low,median_effect_High_minus_Low,paired_wilcoxon_p,paired_wilcoxon_FDR_within_strategy
+leave_four_out_global_rank_balanced,MIF,8,7,0.28152101478125524,0.1674098610988501,0.078125,0.078125
+leave_four_out_global_rank_balanced,SPP1,8,8,0.5275420521801949,0.2754787139669289,0.0078125,0.01171875
+leave_four_out_global_rank_balanced,four_gene_readout,8,8,1.295407004705747,1.3052470288550269,0.0078125,0.01171875
+leave_four_out_patient_internal_rank_balanced,MIF,8,7,0.3263612626741449,0.17154607002582223,0.0234375,0.03515625
+leave_four_out_patient_internal_rank_balanced,SPP1,8,7,0.509011240741603,0.24842161461331458,0.0390625,0.0390625
+leave_four_out_patient_internal_rank_balanced,four_gene_readout,8,8,1.3250065429087188,1.247922762876176,0.0078125,0.0234375
+locked_original_GlycoGroup,MIF,8,7,0.38843009479776086,0.24632477242166845,0.0234375,0.0234375
+locked_original_GlycoGroup,SPP1,8,7,0.5287036732263132,0.14299859953499822,0.0234375,0.0234375
+locked_original_GlycoGroup,four_gene_readout,8,8,2.127152689816828,2.1254408993285043,0.0078125,0.0234375
