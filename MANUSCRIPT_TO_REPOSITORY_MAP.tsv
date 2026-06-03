@@ -1,20 +1,21 @@
-Manuscript component	Repository item	Role	Interpretation boundary
-Figure 2C	locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv	Authoritative 15,391-cell rank-balanced GlycoHigh/GlycoLow assignment	Score-defined state; not a UMAP cluster or mechanistic proof
-Figure 2D	scripts/06_inferCNV_malignant.R	Marker and inferCNV malignant-feature support	Supportive evidence only
-Figure 3 / Supplementary Table S3	scripts/16_patient_level_ligand_effects.R; locked_source_data/ligand/	Patient-aware MIF/SPP1/PTGES source tables	Association support; not direct immune-suppression evidence
-Figure 4 / Supplementary Figure S8	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R	Inference-based communication and directional-concordance analyses	Not functional validation
-Figure 5	scripts/11_spatial_transcriptomics.R	Spatial and RCTD-related support	Spot-level co-enrichment only
-Figure 6 / Supplementary Figure S14	scripts/07_LASSO_risk_score.R; locked_source_data/lasso/	TCGA four-gene tissue-level readout and model-selection stability	Discovery-stage tissue-level readout; not deployment-ready
-External survival evaluation	scripts/10_GSE14520_validation.R	Fixed-coefficient external evaluation	Retrospective association
-Exploratory treatment-associated analysis	scripts/12_GSE235863_exploratory_association.R	Small anti-PD-1 plus lenvatinib cohort analysis	Hypothesis-generating only
-Supplementary Figure S15	scripts/08_glycolysis_gradient.R; locked_source_data/supplementary_figures/FigS15_glycolysis_gradient_LOCKED_source.csv	15,391-cell equal-cell-count-bin descriptive gradient redraw	Not trajectory inference or functional evidence
-Supplementary Figure S16	scripts/09_TF_activity.R	Auxiliary TF-activity analysis	Not mechanistic validation
-Supplementary Figure S21	scripts/14_OXPHOS_metabolic_specificity.R; scripts/17_partial_correlation_metabolic_specificity.R	Auxiliary metabolic-specificity analyses	Contextual sensitivity support
-Supplementary Table S10	scripts/revision/patient_internal_median_sensitivity.py; expected_outputs/revision/Supplementary_Table_S10.xlsx	Patient-internal rank-balanced grouping stability	Grouping-stability evidence only; expression-level reassociation is not recomputed here
-Supplementary Figure S31 / Supplementary Table S12	scripts/revision/gse189903_locked_replication_python.py; scripts/revision/generate_gse189903_replication_figure.py; expected_outputs/revision/Supplementary_Table_S12.xlsx	Independent GSE189903 HCC malignant-cell locked replication	Directional replication evidence; no re-optimization and not a clinical validation cohort
-Supplementary Figure S32 / Supplementary Table S13	scripts/revision/gse149614_leave_four_out_expression_python.py; scripts/revision/generate_gse149614_leave_four_out_figure.py; expected_outputs/revision/Supplementary_Table_S13.xlsx	Discovery-cohort leave-four-out expression sensitivity excluding TPI1/ENO1/LDHA/SLC2A1 from the glycolysis score	Expression-level sensitivity; not functional validation
-Supplementary Figure S33 / Supplementary Table S14	scripts/revision/gse238264_spatial_block_permutation_python.py; scripts/revision/generate_gse238264_spatial_block_figure.py; expected_outputs/revision/Supplementary_Table_S14.xlsx	Public GSE238264 Visium spatial-block empirical sensitivity	Expression-level block sensitivity; not RCTD-adjusted and not direct signaling
-Supplementary Table S11	scripts/revision/gse14520_stable_cox_python_validation.py; expected_outputs/revision/Supplementary_Table_S11.xlsx	Stable GSE14520 Cox reconstruction with binary AFP coding	Retrospective external score-level context only
-Prepared template: RCTD-adjusted spatial-block empirical refit	scripts/revision/spatial_block_permutation_inference.R	Prepared template requiring original RCTD spot-proportion CSV	Prepared-not-run unless outputs are generated and reviewed
-Prepared template: GSE14520 Firth Cox sensitivity	scripts/revision/gse14520_firth_cox_refit.R	Prepared template requiring GSE14520 source CSV from frozen workflow	Prepared-not-run unless outputs are generated and reviewed
-Prepared template: independent single-cell Seurat replication	scripts/revision/independent_single_cell_locked_replication.R	Prepared template requiring standardized Seurat object and malignant-cell flag	Prepared-not-run unless outputs are generated and reviewed
+Manuscript_item	Repository_script_or_file	Status	Notes
+Figure 1	README.md; scripts/01_QC_clustering.R	completed	Study design and single-cell atlas summary.
+Figure 2	locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv; scripts/02_glycolysis_scoring.R; scripts/06_inferCNV_malignant.R	completed	Authoritative GlycoHigh/GlycoLow grouping uses locked Figure 2C table.
+Figure 3	scripts/16_patient_level_ligand_effects.R	completed	Patient-aware MIF/SPP1/PTGES expression and detection summaries.
+Figure 4	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R	completed	Inference-based communication and transcriptional-response support.
+Figure 5	scripts/11_spatial_transcriptomics.R	completed	Spatial spot-level co-enrichment and RCTD-adjusted support.
+Figure 6	scripts/07_LASSO_risk_score.R; scripts/10_GSE14520_validation.R; scripts/revision/generate_revised_figure6.py	completed	Four-gene tissue-level readout and external score-level evaluation.
+Supplementary Figure S15	scripts/08_glycolysis_gradient.R	completed	Continuous glycolysis-bin visualization from locked source table.
+Supplementary Figure S21	scripts/12_GSE235863_exploratory_association.R	completed_exploratory	Small anti-PD-1 plus lenvatinib cohort; exploratory only.
+Supplementary Figure S31	scripts/revision/gse189903_locked_replication_python.py; scripts/revision/generate_gse189903_replication_figure.py	completed	Independent GSE189903 locked replication without re-optimization.
+Supplementary Figure S32	scripts/revision/gse149614_leave_four_out_expression_python.py; scripts/revision/generate_gse149614_leave_four_out_figure.py	completed	Discovery-cohort leave-four-out expression sensitivity excluding TPI1/ENO1/LDHA/SLC2A1.
+Supplementary Figure S33	scripts/revision/gse238264_spatial_block_permutation_python.py; scripts/revision/generate_gse238264_spatial_block_figure.py	completed	Public Visium spatial-block empirical sensitivity; not RCTD-adjusted.
+Supplementary Table S3	scripts/16_patient_level_ligand_effects.R	completed	Patient-level ligand expression and detection summaries.
+Supplementary Table S4	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R	completed	Communication, NicheNet, compatibility, and LIANA outputs.
+Supplementary Table S8	DATA_AND_CLAIM_BOUNDARIES.md; docs/REVISION_REPRODUCIBILITY_NOTE.md	completed	Evidence ladder and claim-boundary documentation.
+Supplementary Table S10	scripts/revision/patient_internal_median_sensitivity.py; expected_outputs/revision/Supplementary_Table_S10.xlsx	completed	Patient-internal rank-balanced grouping stability only; not expression reassociation.
+Supplementary Table S11	scripts/revision/gse14520_stable_cox_python_validation.py; expected_outputs/revision/Supplementary_Table_S11.xlsx	completed	Stable GSE14520 Cox reconstruction with binary AFP coding.
+Supplementary Table S12	scripts/revision/gse189903_locked_replication_python.py; expected_outputs/revision/Supplementary_Table_S12.xlsx	completed	Independent GSE189903 locked replication.
+Supplementary Table S13	scripts/revision/gse149614_leave_four_out_expression_python.py; expected_outputs/revision/Supplementary_Table_S13.xlsx	completed	Leave-four-out discovery-cohort expression sensitivity.
+Supplementary Table S14	scripts/revision/gse238264_spatial_block_permutation_python.py; expected_outputs/revision/Supplementary_Table_S14.xlsx	completed	Spatial-block empirical sensitivity using public Visium matrices.
+Prepared templates	scripts/revision/independent_single_cell_locked_replication.R; scripts/revision/spatial_block_permutation_inference.R; scripts/revision/gse14520_firth_cox_refit.R	prepared_not_run	Keep claim boundary clear unless outputs are explicitly mapped as completed.
