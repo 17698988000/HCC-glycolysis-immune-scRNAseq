@@ -56,6 +56,18 @@ archive_not_used/        manifest of revision-era materials omitted from the pub
 ```
 
 Generated figures and large intermediate objects are intentionally not committed. Manuscript figures are submitted separately; scripts and compact locked source tables are retained here for reproducibility and provenance.
+## Revision reproducibility materials
+
+Revision-stage reproducibility files are provided in the following locations:
+
+- `RUN_ORDER.md`: recommended execution sequence, including revision-stage scripts.
+- `MANUSCRIPT_TO_REPOSITORY_MAP.tsv`: mapping from manuscript figures/tables to repository scripts and compact outputs.
+- `scripts/revision/`: revision-stage analysis and figure-redraw scripts.
+- `expected_outputs/revision/`: compact revision-stage expected outputs for Supplementary Tables S10-S14 and related CSV summaries.
+- `docs/REVISION_REPRODUCIBILITY_NOTE.md`: explanation of completed revision analyses, prepared-but-not-claimed templates, data redistribution boundaries, and interpretation boundaries.
+- `requirements-revision.txt`: Python package requirements for revision-stage scripts.
+
+Large public raw matrices, Visium image files, TCGA/Xena downloads, local cache files, and large intermediate RDS objects are not redistributed.
 
 ## Public data resources
 
