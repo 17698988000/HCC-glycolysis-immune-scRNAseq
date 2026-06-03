@@ -8,13 +8,13 @@ Repository URL:
 
 `https://github.com/17698988000/HCC-glycolysis-immune-scRNAseq`
 
-Submission revision release:
+Submission revision final release:
 
-`v1.0.1-submission-revision`
+`v1.0.2-submission-revision-final`
 
-Final release commit:
+Release commit:
 
-`5dd8fd1`
+The immutable release commit is recorded on the GitHub release/tag page for `v1.0.2-submission-revision-final`.
 
 ## Included
 
