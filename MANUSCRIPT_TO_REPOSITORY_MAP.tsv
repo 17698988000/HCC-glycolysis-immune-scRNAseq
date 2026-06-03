@@ -1,44 +1,20 @@
-Manuscript item	Repository script or file	Status	Notes
-Figure 1A-D	README.md; CODE_AVAILABILITY_NOTE.md; DATA_AND_CLAIM_BOUNDARIES.md	mapped	Study design, dataset roles, and interpretation boundaries.
-Figure 2A-C	scripts/02_glycolysis_scoring.R; locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv	completed	Authoritative GlycoHigh/GlycoLow assignment table.
-Figure 2D	scripts/06_inferCNV_malignant.R	mapped	inferCNV is supportive malignant-feature evidence, not a perfect truth label.
-Figure 3A-D	scripts/16_patient_level_ligand_effects.R	completed	Patient-aware MIF/SPP1/PTGES expression and detection summaries.
-Figure 4A-B	scripts/03_cellchat_analysis.R	mapped	CellChat communication-potential inference only.
-Figure 4C	scripts/15_NicheNet_analysis.R	mapped	NicheNet transcriptional-response prioritization only.
-Figure 5A-C	scripts/11_spatial_transcriptomics.R	mapped	Spatial spot-level tissue co-enrichment and RCTD-adjusted support.
-Figure 6	scripts/07_LASSO_risk_score.R; scripts/10_GSE14520_validation.R; scripts/revision/generate_revised_figure6.py	completed	Four-gene score is retrospective tissue-level readout, not a clinical assay.
-Supplementary Figure S1	scripts/01_QC_clustering.R	mapped	Single-cell integration and patient/batch context.
-Supplementary Figure S2	scripts/16_patient_level_ligand_effects.R	completed	Continuous ligand-glycolysis association context.
-Supplementary Figure S5	scripts/03_cellchat_analysis.R	mapped	Subtype-resolved CellChat visualization.
-Supplementary Figure S6	scripts/02_glycolysis_scoring.R	mapped	Technical covariate sensitivity for glycolysis score.
-Supplementary Figure S8	scripts/18_LIANA_directional_concordance.R	mapped	Expression-level compatibility and LIANA directional-concordance check.
-Supplementary Figure S9	scripts/03_cellchat_analysis.R	mapped	UMI downsampling CellChat sensitivity.
-Supplementary Figure S15	scripts/08_glycolysis_gradient.R	completed	Locked glycolysis-gradient redraw from compact source data.
-Supplementary Figure S18	scripts/11_spatial_transcriptomics.R	mapped	Full-resolution spatial GlycoHigh/GlycoLow spot maps.
-Supplementary Figure S19	scripts/02_glycolysis_scoring.R	mapped	GCK-removal or related glycolysis-score robustness check.
-Supplementary Figure S21	locked_source_data/bulk/TCGA_LIHC_Fig6B_source.csv; locked_source_data/bulk/GSE14520_Fig6C_source.csv	completed	Locked bulk survival source tables.
-Supplementary Figure S22	scripts/15_NicheNet_analysis.R	mapped	Focused NicheNet ligand activity prioritization.
-Supplementary Figure S25	scripts/02_glycolysis_scoring.R	mapped	Leave-one-out glycolysis-score robustness check.
-Supplementary Figure S27	scripts/02_glycolysis_scoring.R	mapped	AUCell-independent scoring-method sensitivity.
-Supplementary Figure S29	scripts/02_glycolysis_scoring.R	mapped	Patient-level pseudobulk sensitivity.
-Supplementary Figure S30	scripts/12_GSE235863_exploratory_association.R	mapped	Exploratory small ICI-containing cohort context only.
-Supplementary Figure S31	scripts/revision/gse189903_locked_replication_python.py; scripts/revision/generate_gse189903_replication_figure.py; expected_outputs/revision/Supplementary_Table_S12.xlsx	completed	Independent GSE189903 locked HCC malignant-cell replication; no re-optimization.
-Supplementary Figure S32	scripts/revision/gse149614_leave_four_out_expression_python.py; scripts/revision/generate_gse149614_leave_four_out_figure.py; expected_outputs/revision/Supplementary_Table_S13.xlsx	completed	Discovery-cohort leave-four-out sensitivity excluding TPI1/ENO1/LDHA/SLC2A1.
-Supplementary Figure S33	scripts/revision/gse238264_spatial_block_permutation_python.py; scripts/revision/generate_gse238264_spatial_block_figure.py; expected_outputs/revision/Supplementary_Table_S14.xlsx	completed	Public-Visium spatial-block empirical sensitivity; separate from RCTD-adjusted regression.
-Supplementary Table S1	README.md	mapped	Curated 22-gene glycolysis gene set documented in manuscript and repository notes.
-Supplementary Table S2	scripts/01_QC_clustering.R	mapped	Cell count and annotation summaries.
-Supplementary Table S3	scripts/16_patient_level_ligand_effects.R	completed	Patient-aware ligand summaries.
-Supplementary Table S4	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R; scripts/11_spatial_transcriptomics.R	mapped	Communication, ligand-response, LIANA, and spatial model summaries.
-Supplementary Table S5	scripts/02_glycolysis_scoring.R	mapped	Alternative scoring-method concordance.
-Supplementary Table S6	scripts/02_glycolysis_scoring.R	mapped	Patient-level pseudobulk robustness.
-Supplementary Table S8	DATA_AND_CLAIM_BOUNDARIES.md	mapped	Evidence ladder and claim boundaries.
-Supplementary Table S10	scripts/revision/patient_internal_median_sensitivity.py; expected_outputs/revision/Supplementary_Table_S10.xlsx	completed	Patient-internal grouping stability only; not expression reassociation.
-Supplementary Table S11	scripts/revision/gse14520_stable_cox_python_validation.py; expected_outputs/revision/Supplementary_Table_S11.xlsx	completed	Stable GSE14520 Cox reconstruction with binary AFP coding.
-Supplementary Table S12	scripts/revision/gse189903_locked_replication_python.py; expected_outputs/revision/Supplementary_Table_S12.xlsx	completed	Independent GSE189903 locked replication.
-Supplementary Table S13	scripts/revision/gse149614_leave_four_out_expression_python.py; expected_outputs/revision/Supplementary_Table_S13.xlsx	completed	Leave-four-out expression sensitivity.
-Supplementary Table S14	scripts/revision/gse238264_spatial_block_permutation_python.py; expected_outputs/revision/Supplementary_Table_S14.xlsx	completed	Spatial-block permutation sensitivity.
-README / homepage	README.md	completed	Repository scope, locked conventions, public data resources, and workflow entry point.
-Revision note	docs/REVISION_REPRODUCIBILITY_NOTE.md	completed	Clarifies completed analyses versus prepared-but-not-claimed templates.
-Run order	RUN_ORDER.md	completed	Recommended execution sequence including revision-stage steps.
-Python revision dependencies	requirements-revision.txt	completed	Python packages for revision-stage scripts.
-Ignored files	.gitignore	completed	Prevents raw matrices, RDS objects, zip archives, and cache files from being committed.
+Manuscript component	Repository item	Role	Interpretation boundary
+Figure 2C	locked_source_data/single_cell/Fig2C_15391_tumor_hepatocyte_GlycoHigh_GlycoLow_FIXED.csv	Authoritative 15,391-cell rank-balanced GlycoHigh/GlycoLow assignment	Score-defined state; not a UMAP cluster or mechanistic proof
+Figure 2D	scripts/06_inferCNV_malignant.R	Marker and inferCNV malignant-feature support	Supportive evidence only
+Figure 3 / Supplementary Table S3	scripts/16_patient_level_ligand_effects.R; locked_source_data/ligand/	Patient-aware MIF/SPP1/PTGES source tables	Association support; not direct immune-suppression evidence
+Figure 4 / Supplementary Figure S8	scripts/03_cellchat_analysis.R; scripts/15_NicheNet_analysis.R; scripts/18_LIANA_directional_concordance.R	Inference-based communication and directional-concordance analyses	Not functional validation
+Figure 5	scripts/11_spatial_transcriptomics.R	Spatial and RCTD-related support	Spot-level co-enrichment only
+Figure 6 / Supplementary Figure S14	scripts/07_LASSO_risk_score.R; locked_source_data/lasso/	TCGA four-gene tissue-level readout and model-selection stability	Discovery-stage tissue-level readout; not deployment-ready
+External survival evaluation	scripts/10_GSE14520_validation.R	Fixed-coefficient external evaluation	Retrospective association
+Exploratory treatment-associated analysis	scripts/12_GSE235863_exploratory_association.R	Small anti-PD-1 plus lenvatinib cohort analysis	Hypothesis-generating only
+Supplementary Figure S15	scripts/08_glycolysis_gradient.R; locked_source_data/supplementary_figures/FigS15_glycolysis_gradient_LOCKED_source.csv	15,391-cell equal-cell-count-bin descriptive gradient redraw	Not trajectory inference or functional evidence
+Supplementary Figure S16	scripts/09_TF_activity.R	Auxiliary TF-activity analysis	Not mechanistic validation
+Supplementary Figure S21	scripts/14_OXPHOS_metabolic_specificity.R; scripts/17_partial_correlation_metabolic_specificity.R	Auxiliary metabolic-specificity analyses	Contextual sensitivity support
+Supplementary Table S10	scripts/revision/patient_internal_median_sensitivity.py; expected_outputs/revision/Supplementary_Table_S10.xlsx	Patient-internal rank-balanced grouping stability	Grouping-stability evidence only; expression-level reassociation is not recomputed here
+Supplementary Figure S31 / Supplementary Table S12	scripts/revision/gse189903_locked_replication_python.py; scripts/revision/generate_gse189903_replication_figure.py; expected_outputs/revision/Supplementary_Table_S12.xlsx	Independent GSE189903 HCC malignant-cell locked replication	Directional replication evidence; no re-optimization and not a clinical validation cohort
+Supplementary Figure S32 / Supplementary Table S13	scripts/revision/gse149614_leave_four_out_expression_python.py; scripts/revision/generate_gse149614_leave_four_out_figure.py; expected_outputs/revision/Supplementary_Table_S13.xlsx	Discovery-cohort leave-four-out expression sensitivity excluding TPI1/ENO1/LDHA/SLC2A1 from the glycolysis score	Expression-level sensitivity; not functional validation
+Supplementary Figure S33 / Supplementary Table S14	scripts/revision/gse238264_spatial_block_permutation_python.py; scripts/revision/generate_gse238264_spatial_block_figure.py; expected_outputs/revision/Supplementary_Table_S14.xlsx	Public GSE238264 Visium spatial-block empirical sensitivity	Expression-level block sensitivity; not RCTD-adjusted and not direct signaling
+Supplementary Table S11	scripts/revision/gse14520_stable_cox_python_validation.py; expected_outputs/revision/Supplementary_Table_S11.xlsx	Stable GSE14520 Cox reconstruction with binary AFP coding	Retrospective external score-level context only
+Prepared template: RCTD-adjusted spatial-block empirical refit	scripts/revision/spatial_block_permutation_inference.R	Prepared template requiring original RCTD spot-proportion CSV	Prepared-not-run unless outputs are generated and reviewed
+Prepared template: GSE14520 Firth Cox sensitivity	scripts/revision/gse14520_firth_cox_refit.R	Prepared template requiring GSE14520 source CSV from frozen workflow	Prepared-not-run unless outputs are generated and reviewed
+Prepared template: independent single-cell Seurat replication	scripts/revision/independent_single_cell_locked_replication.R	Prepared template requiring standardized Seurat object and malignant-cell flag	Prepared-not-run unless outputs are generated and reviewed
