@@ -10,11 +10,11 @@ Repository URL:
 
 Submission revision final release:
 
-`v1.0.2-submission-revision-final`
+`v1.0.3-submission-revision-final-clean`
 
 Release commit:
 
-The immutable release commit is recorded on the GitHub release/tag page for `v1.0.2-submission-revision-final`.
+The immutable release commit is recorded on the GitHub release/tag page for `v1.0.3-submission-revision-final-clean`.
 
 ## Included
 
